@@ -6,3 +6,4 @@ coverage
 npm-debug.log*
 configs/home-assistant.yaml
 configs/home-assistant-ca.crt
+.idea/

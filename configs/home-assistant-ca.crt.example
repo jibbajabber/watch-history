@@ -1,0 +1,10 @@
+# Copy your CA certificate here as PEM text and save it as:
+# configs/home-assistant-ca.crt
+#
+# This file is optional and only needed when your Home Assistant instance
+# presents a certificate chain that is not trusted by the container.
+#
+# Example:
+# -----BEGIN CERTIFICATE-----
+# MIID...
+# -----END CERTIFICATE-----

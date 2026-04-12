@@ -1,0 +1,7 @@
+base_url: "http://homeassistant.local:8123"
+entities:
+  - "media_player.sky_q_livingroom"
+  - "media_player.sky_q_bedroom"
+sync:
+  enabled: false
+  interval_minutes: 30

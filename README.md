@@ -43,6 +43,23 @@ The current application is a working first version:
 
 Current planning is organized as feature-specific architecture documents under `doc/architecture`.
 
+## Progress And TODO
+
+Completed:
+- Feature 1: Docker-first app scaffold with week, month, and year views
+- Feature 2: Home Assistant authentication and connectivity
+- Feature 3: Sky Q history import from Home Assistant entities
+- Feature 4: Timeline summaries, analytics, and improved activity overview
+- Feature 5: Scheduled Home Assistant sync with editable interval and overlap protection
+
+Paused:
+- Feature 6: Channel logos
+
+Recommended next pickup:
+1. Run the discovery phase from `doc/architecture/feature-6-channel-logos.md`
+2. Determine which Home Assistant/Sky Q fields are stable enough to use as canonical channel identifiers
+3. Decide whether logos should come from curated local assets, a mapped registry, or another documented source
+
 ## Development Workflow
 
 The supported development workflow runs inside Docker.

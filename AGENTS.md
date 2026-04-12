@@ -173,8 +173,21 @@ Use this section to record decisions as they are made.
 
 ## Next Discovery Steps
 
-1. Define the first 2-3 source integrations to support.
-2. Decide the core user journey for v1.
-3. Define the minimal canonical data model for imported watch events.
-4. Choose whether the initial product is local/personal or account-based.
-5. Convert confirmed decisions into a lightweight product spec and technical plan.
+1. Run the channel-logo discovery phase and identify stable channel keys from Home Assistant Sky Q metadata.
+2. Decide the logo asset strategy for channel branding.
+3. Confirm whether any additional UI polish is needed before feature 6 implementation begins.
+
+## Feature Progress
+
+- Feature 1: Complete
+  Docker-first app scaffold with weekly, monthly, and yearly timeline views is implemented.
+- Feature 2: Complete
+  Home Assistant authentication and connectivity checks are implemented.
+- Feature 3: Complete
+  Sky Q history import from Home Assistant entities is implemented.
+- Feature 4: Complete
+  Timeline summaries and analytics improvements are implemented.
+- Feature 5: Complete
+  Scheduled Home Assistant sync is implemented and configurable from the UI.
+- Feature 6: Planned
+  Channel logos need a discovery phase before implementation.

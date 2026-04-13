@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { SourceListScreen } from "@/components/source-list-screen";
 import {
-  importHomeAssistantHistory,
+  importSourceHistory,
   updateHomeAssistantSyncSettings
 } from "@/app/sources/actions";
 import { getSourceStatuses } from "@/lib/sources";
@@ -13,7 +13,7 @@ export default async function SourcesPage() {
     <AppShell activeView="sources">
       <SourceListScreen
         sources={sources}
-        importAction={importHomeAssistantHistory}
+        importSourceAction={importSourceHistory}
         updateSyncAction={updateHomeAssistantSyncSettings}
       />
     </AppShell>

@@ -134,7 +134,7 @@ export async function getTimelineViewData(view: TimelineView): Promise<TimelineR
           source_name,
           metadata->>'channel' AS channel_name,
           metadata->>'channel_key' AS channel_key,
-          metadata->>'entity_id' AS device_label,
+          COALESCE(metadata->>'device_label', metadata->>'entity_id') AS device_label,
           watched_at::text,
           duration_minutes
         FROM watch_events

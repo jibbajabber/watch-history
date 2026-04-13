@@ -1,6 +1,12 @@
 # Watch History
 
-This repository is for planning and building a web application that aggregates watch history from multiple media sources into a unified timeline.
+Watch history consumes the content you watch as you go to transform it into a unified timeline.
+
+We all have those great shows we watch that we want to recommend to friends and family, but with so many platforms and
+  sources, it's not always easy to recall what the best of the best were.
+
+Watch history aims to try to solve that, it collects your viewing data from sources it can talk to, it will then in future
+  allow you to pick out the ones that are special that can go on to a favourties/recommeds list
 
 ![Watch History main screen](public/static/watch-history-main.png)
 

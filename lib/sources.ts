@@ -14,8 +14,16 @@ type SourceRow = {
 };
 
 type ImportRow = {
-  started_at: string;
-  status: string;
+  slug: string;
+  latest_status: string | null;
+  latest_started_at: string | null;
+  latest_completed_at: string | null;
+  latest_error_message: string | null;
+  latest_success_started_at: string | null;
+  latest_success_completed_at: string | null;
+  latest_failed_started_at: string | null;
+  latest_failed_completed_at: string | null;
+  latest_failed_error_message: string | null;
 };
 
 const sourceRegistry = [
@@ -90,6 +98,43 @@ function formatNextSync(value: string | null) {
   }).format(new Date(value));
 }
 
+function formatRelativeFailure(message: string | null) {
+  if (!message) {
+    return "Import failed.";
+  }
+
+  return message.length > 120 ? `${message.slice(0, 117)}...` : message;
+}
+
+function hasLaterFailure(importRow: ImportRow | null) {
+  if (!importRow?.latest_failed_started_at) {
+    return false;
+  }
+
+  if (!importRow.latest_success_started_at) {
+    return true;
+  }
+
+  return (
+    new Date(importRow.latest_failed_started_at).getTime() >=
+    new Date(importRow.latest_success_started_at).getTime()
+  );
+}
+
+function isSourceStale(
+  latestImportAt: string | null,
+  syncEnabled: boolean,
+  syncIntervalMinutes: number
+) {
+  if (!syncEnabled || !latestImportAt) {
+    return false;
+  }
+
+  const elapsedMs = Date.now() - new Date(latestImportAt).getTime();
+
+  return elapsedMs > syncIntervalMinutes * 2 * 60 * 1000;
+}
+
 type HomeAssistantDerivedStatus = Omit<
   SourceStatus,
   | "slug"
@@ -111,8 +156,38 @@ function getHomeAssistantStatus(
   configReady: boolean,
   envReady: boolean,
   latestImportAt: string | null,
-  connectionOk: boolean
+  connectionOk: boolean,
+  importHealth: {
+    hasRecentFailure: boolean;
+    isStale: boolean;
+  }
 ): HomeAssistantDerivedStatus {
+  if (configReady && envReady && importHealth.hasRecentFailure) {
+    return {
+      status: "attention",
+      statusLabel: "Failing",
+      envReady,
+      connectionPathLabel: connectionOk ? "Verified" : "Unavailable",
+      nextStepTitle: "Import health needs attention.",
+      nextStepBody:
+        connectionOk
+          ? "Connectivity is working, but the latest Home Assistant import failed. The app should keep running and scheduled sync will retry at the next interval."
+          : "The latest Home Assistant import failed and the current connectivity check is also failing. The app should keep running and scheduled sync will retry at the next interval."
+    };
+  }
+
+  if (configReady && envReady && connectionOk && importHealth.isStale) {
+    return {
+      status: "attention",
+      statusLabel: "Stale",
+      envReady,
+      connectionPathLabel: "Verified",
+      nextStepTitle: "Import freshness needs attention.",
+      nextStepBody:
+        "Home Assistant is connected, but recent imports are older than expected for the configured sync interval."
+    };
+  }
+
   if (latestImportAt) {
     return {
       status: "ready",
@@ -163,8 +238,38 @@ function getHomeAssistantStatus(
 function getPlexStatus(
   envReady: boolean,
   latestImportAt: string | null,
-  connectionOk: boolean
+  connectionOk: boolean,
+  importHealth: {
+    hasRecentFailure: boolean;
+    isStale: boolean;
+  }
 ): HomeAssistantDerivedStatus {
+  if (envReady && importHealth.hasRecentFailure) {
+    return {
+      status: "attention",
+      statusLabel: "Failing",
+      envReady,
+      connectionPathLabel: connectionOk ? "Verified" : "Unavailable",
+      nextStepTitle: "Import health needs attention.",
+      nextStepBody:
+        connectionOk
+          ? "Connectivity is working, but the latest Plex import failed. The app should keep running and scheduled sync will retry at the next interval."
+          : "The latest Plex import failed and the current connectivity check is also failing. The app should keep running and scheduled sync will retry at the next interval."
+    };
+  }
+
+  if (envReady && connectionOk && importHealth.isStale) {
+    return {
+      status: "attention",
+      statusLabel: "Stale",
+      envReady,
+      connectionPathLabel: "Verified",
+      nextStepTitle: "Import freshness needs attention.",
+      nextStepBody:
+        "Plex is connected, but recent imports are older than expected for the configured sync interval."
+    };
+  }
+
   if (latestImportAt) {
     return {
       status: "ready",
@@ -231,21 +336,43 @@ export async function getSourceStatuses(): Promise<SourceStatus[]> {
     [sourceRegistry.map((source) => source.slug)]
   );
 
-  const importsResult = await query<ImportRow & { slug: string }>(
+  const importsResult = await query<ImportRow>(
     `
       SELECT
         s.slug,
-        ij.started_at::text,
-        ij.status
-      FROM import_jobs ij
-      INNER JOIN sources s ON s.id = ij.source_id
-      INNER JOIN (
-        SELECT source_id, MAX(started_at) AS max_started_at
+        latest.status AS latest_status,
+        latest.started_at::text AS latest_started_at,
+        latest.completed_at::text AS latest_completed_at,
+        latest.error_message AS latest_error_message,
+        latest_success.started_at::text AS latest_success_started_at,
+        latest_success.completed_at::text AS latest_success_completed_at,
+        latest_failed.started_at::text AS latest_failed_started_at,
+        latest_failed.completed_at::text AS latest_failed_completed_at,
+        latest_failed.error_message AS latest_failed_error_message
+      FROM sources s
+      LEFT JOIN LATERAL (
+        SELECT status, started_at, completed_at, error_message
         FROM import_jobs
-        GROUP BY source_id
-      ) latest
-        ON latest.source_id = ij.source_id
-       AND latest.max_started_at = ij.started_at
+        WHERE source_id = s.id
+        ORDER BY started_at DESC
+        LIMIT 1
+      ) latest ON true
+      LEFT JOIN LATERAL (
+        SELECT started_at, completed_at
+        FROM import_jobs
+        WHERE source_id = s.id
+          AND status = 'completed'
+        ORDER BY started_at DESC
+        LIMIT 1
+      ) latest_success ON true
+      LEFT JOIN LATERAL (
+        SELECT started_at, completed_at, error_message
+        FROM import_jobs
+        WHERE source_id = s.id
+          AND status = 'failed'
+        ORDER BY started_at DESC
+        LIMIT 1
+      ) latest_failed ON true
       WHERE s.slug = ANY($1::text[])
     `,
     [sourceRegistry.map((source) => source.slug)]
@@ -257,7 +384,7 @@ export async function getSourceStatuses(): Promise<SourceStatus[]> {
     const source = sourcesResult.rows.find((row) => row.slug === registrySource.slug);
     const latestImport = importBySlug.get(registrySource.slug) ?? null;
     const envReady = registrySource.expectedEnvVars.every((envVar) => Boolean(process.env[envVar]));
-    const latestImportAt = latestImport?.started_at ?? null;
+    const latestImportAt = latestImport?.latest_started_at ?? null;
     const isHomeAssistant = registrySource.slug === "home-assistant";
     const syncEnabled = isHomeAssistant
       ? configResult.ok
@@ -273,8 +400,9 @@ export async function getSourceStatuses(): Promise<SourceStatus[]> {
       : plexConfigResult.ok
         ? plexConfigResult.config.sync.intervalMinutes
         : 30;
-    const nextSyncAt = syncEnabled && latestImportAt
-      ? new Date(new Date(latestImportAt).getTime() + syncIntervalMinutes * 60 * 1000).toISOString()
+    const freshnessTime = latestImport?.latest_completed_at ?? latestImportAt;
+    const nextSyncAt = syncEnabled && freshnessTime
+      ? new Date(new Date(freshnessTime).getTime() + syncIntervalMinutes * 60 * 1000).toISOString()
       : null;
     const nextSyncLabel = syncEnabled
       ? nextSyncAt
@@ -283,6 +411,11 @@ export async function getSourceStatuses(): Promise<SourceStatus[]> {
           : formatNextSync(nextSyncAt)
         : "Waiting for first run"
       : "Disabled";
+
+    const importHealth = {
+      hasRecentFailure: hasLaterFailure(latestImport),
+      isStale: isSourceStale(freshnessTime, syncEnabled, syncIntervalMinutes)
+    };
 
     const configuredItems = isHomeAssistant
       ? configResult.ok
@@ -326,14 +459,34 @@ export async function getSourceStatuses(): Promise<SourceStatus[]> {
             `Check: ${plexConnectivity.message}`
           ];
 
+    if (latestImport?.latest_success_started_at) {
+      connectionDetails.push(
+        `Last successful import: ${formatLatestImport(latestImport.latest_success_started_at)}`
+      );
+    }
+
+    if (latestImport?.latest_failed_started_at && importHealth.hasRecentFailure) {
+      connectionDetails.push(
+        `Last failed import: ${formatLatestImport(latestImport.latest_failed_started_at)}`
+      );
+      connectionDetails.push(
+        `Failure: ${formatRelativeFailure(latestImport.latest_failed_error_message)}`
+      );
+    } else if (importHealth.isStale && freshnessTime) {
+      connectionDetails.push(
+        `Import freshness: older than expected for the ${syncIntervalMinutes} min sync interval`
+      );
+    }
+
     const derivedStatus = isHomeAssistant
       ? getHomeAssistantStatus(
           configResult.ok,
           envReady,
           latestImportAt,
-          homeAssistantConnectivity.ok
+          homeAssistantConnectivity.ok,
+          importHealth
         )
-      : getPlexStatus(envReady, latestImportAt, plexConnectivity.ok);
+      : getPlexStatus(envReady, latestImportAt, plexConnectivity.ok, importHealth);
 
     return {
       slug: registrySource.slug,
@@ -342,7 +495,7 @@ export async function getSourceStatuses(): Promise<SourceStatus[]> {
       description: registrySource.description,
       expectedEnvVars: [...registrySource.expectedEnvVars],
       latestImportLabel: latestImport
-        ? `${formatLatestImport(latestImport.started_at)} (${latestImport.status})`
+        ? `${formatLatestImport(latestImport.latest_started_at ?? latestImportAt)} (${latestImport.latest_status})`
         : "Never",
       configStatusLabel: isHomeAssistant
         ? configResult.ok
@@ -360,4 +513,28 @@ export async function getSourceStatuses(): Promise<SourceStatus[]> {
       ...derivedStatus
     };
   });
+}
+
+export async function getSourceHealthNotice() {
+  const sources = await getSourceStatuses();
+  const affected = sources.filter(
+    (source) =>
+      source.status !== "ready" &&
+      (source.syncEnabled || source.latestImportLabel !== "Never")
+  );
+
+  if (affected.length === 0) {
+    return null;
+  }
+
+  const labels = affected.slice(0, 2).map((source) => `${source.displayName}: ${source.statusLabel}`);
+  const extra = affected.length > 2 ? ` +${affected.length - 2} more` : "";
+
+  return {
+    title:
+      affected.length === 1
+        ? `${affected[0].displayName} needs attention`
+        : `${affected.length} sources need attention`,
+    body: `${labels.join(" · ")}${extra}. Imports will retry on the next interval when sync is enabled. Check Sources for details.`
+  };
 }

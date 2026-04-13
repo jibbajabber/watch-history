@@ -25,13 +25,34 @@ function getTone(status: SourceStatus["status"]) {
 
 export function SourceListScreen({
   sources,
+  flashTone,
+  flashMessage,
+  flashDetail,
   importSourceAction,
   updateSyncAction
 }: {
   sources: SourceStatus[];
+  flashTone?: "error" | "success";
+  flashMessage?: string;
+  flashDetail?: string;
   importSourceAction: (formData: FormData) => Promise<void>;
   updateSyncAction: (formData: FormData) => Promise<void>;
 }) {
+  const flashStyles =
+    flashTone === "error"
+      ? {
+          border: "1px solid rgba(255, 127, 106, 0.38)",
+          background: "rgba(255, 127, 106, 0.12)",
+          title: "Import issue",
+          accent: "var(--salmon)"
+        }
+      : {
+          border: "1px solid rgba(116, 224, 192, 0.32)",
+          background: "rgba(116, 224, 192, 0.1)",
+          title: "Update",
+          accent: "var(--mint)"
+        };
+
   return (
     <section style={{ display: "grid", gap: "24px" }}>
       <div style={{ display: "grid", gap: "10px", maxWidth: "48rem" }}>
@@ -58,6 +79,30 @@ export function SourceListScreen({
           from Home Assistant into additional media history integrations such as Plex.
         </p>
       </div>
+
+      {flashMessage ? (
+        <section
+          className="glass-panel"
+          style={{
+            borderRadius: "24px",
+            padding: "18px 20px",
+            display: "grid",
+            gap: "8px",
+            border: flashStyles.border,
+            background: flashStyles.background
+          }}
+        >
+          <span className="eyebrow" style={{ color: flashStyles.accent }}>
+            {flashStyles.title}
+          </span>
+          <strong style={{ fontSize: "1rem" }}>{flashMessage}</strong>
+          {flashDetail ? (
+            <p className="muted" style={{ margin: 0, lineHeight: 1.6 }}>
+              {flashDetail}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       <div
         style={{

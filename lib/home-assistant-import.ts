@@ -1,3 +1,4 @@
+import { getKnownChannelKey } from "@/lib/channels";
 import { getPool, query } from "@/lib/db";
 import { readHomeAssistantConfig } from "@/lib/home-assistant-config";
 import { checkHomeAssistantConnectivity, fetchHomeAssistant } from "@/lib/home-assistant";
@@ -157,7 +158,7 @@ function getMediaType(state: HomeAssistantHistoryState) {
 
 function getChannel(state: HomeAssistantHistoryState) {
   const attributes = state.attributes ?? {};
-  return pickFirstText(attributes, ["media_title", "channel", "channel_name"]);
+  return pickFirstText(attributes, ["media_channel", "channel", "channel_name", "media_title"]);
 }
 
 function isMeaningfulWatchState(state: HomeAssistantHistoryState) {
@@ -348,6 +349,7 @@ function finalizeSession(
     metadata: {
       entity_id: session.entityId,
       channel: session.channel,
+      channel_key: getKnownChannelKey(session.channel),
       normalized_from: "home_assistant_session",
       states: session.states,
       attributes: session.attributes
@@ -475,7 +477,7 @@ async function replaceNormalizedWatchEvents(sourceId: string, sessions: Normaliz
       ]
     );
 
-    insertedCount += result.rowCount;
+    insertedCount += result.rowCount ?? 0;
   }
 
   return insertedCount;

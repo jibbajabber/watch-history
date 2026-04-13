@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 52" role="img" aria-labelledby="title">
+  <title>HBO Max</title>
+  <rect width="96" height="52" rx="10" fill="#2d0f59"/>
+  <text x="36" y="31" fill="#ffffff" font-family="Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">HBO</text>
+  <text x="69" y="31" fill="#b388ff" font-family="Arial, sans-serif" font-size="14" font-weight="700" text-anchor="middle">MAX</text>
+</svg>

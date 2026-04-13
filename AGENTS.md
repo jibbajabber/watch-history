@@ -170,12 +170,16 @@ Use this section to record decisions as they are made.
 | 2026-04-12 | Feature 4 should improve UI summaries and analytics on top of imported watch events. | Focus on making week, month, and year views more informative rather than adding a new source. |
 | 2026-04-12 | Feature 5 should automate the verified Home Assistant import flow with scheduled sync. | Scheduled imports must continue to run inside the Docker-managed environment and remain idempotent. |
 | 2026-04-12 | Feature 6 should add channel logos after an explicit discovery phase. | Logo rendering depends on stable channel identifiers and a documented asset strategy. |
+| 2026-04-13 | Feature 6 starts with a curated local channel-logo registry and no schema migration. | Recognized Sky Q channels map to repo-local SVG assets through `lib/channels.ts`; unknown channels continue to fall back to text. |
+| 2026-04-13 | The importer should prefer `media_channel` over `media_title` when deriving channel identity. | Raw Home Assistant attributes remain preserved in `watch_events.metadata.attributes` for future refinement of channel matching. |
+| 2026-04-13 | Feature 6 is complete with channel and platform badges backed by a curated local registry. | Timeline rows now render recognized live-channel and app/platform brands from normalized Home Assistant metadata with text fallback for unknown labels. |
+| 2026-04-13 | Feature 7 should add Plex as the next source integration. | The first Plex milestone should follow the same source-first, Docker-first, idempotent import model used by the existing Home Assistant flow. |
 
 ## Next Discovery Steps
 
-1. Run the channel-logo discovery phase and identify stable channel keys from Home Assistant Sky Q metadata.
-2. Decide the logo asset strategy for channel branding.
-3. Confirm whether any additional UI polish is needed before feature 6 implementation begins.
+1. Decide whether the first Plex import path should be API-based, file-based, or both.
+2. Define the Plex credential and configuration model for Docker Compose.
+3. Begin implementation from `docs/architecture/feature-7-plex-source-support.md`.
 
 ## Feature Progress
 
@@ -189,5 +193,7 @@ Use this section to record decisions as they are made.
   Timeline summaries and analytics improvements are implemented.
 - Feature 5: Complete
   Scheduled Home Assistant sync is implemented and configurable from the UI.
-- Feature 6: Planned
-  Channel logos need a discovery phase before implementation.
+- Feature 6: Complete
+  Channel and platform branding is implemented with a curated local registry, normalized mappings, and timeline-row rendering.
+- Feature 7: Planned
+  Plex source support is the next integration milestone and now has an architecture note.

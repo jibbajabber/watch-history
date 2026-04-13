@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 52" role="img" aria-labelledby="title">
+  <title>ITV1</title>
+  <rect width="96" height="52" rx="10" fill="#fbf2e7"/>
+  <rect x="7" y="7" width="82" height="38" rx="9" fill="#17202c"/>
+  <text x="48" y="31" fill="#fbf2e7" font-family="Arial, sans-serif" font-size="24" font-weight="700" text-anchor="middle">ITV1</text>
+</svg>

@@ -1,4 +1,5 @@
 import { getAppTimezone } from "@/lib/app-config";
+import { findChannelBrand } from "@/lib/channels";
 import { query } from "@/lib/db";
 import { formatEventDateTime, formatMinutes } from "@/lib/format";
 import type {
@@ -17,6 +18,8 @@ type EventRow = {
   title: string;
   media_type: string | null;
   source_name: string;
+  channel_name: string | null;
+  channel_key: string | null;
   device_label: string | null;
   watched_at: string;
   duration_minutes: number | null;
@@ -129,6 +132,8 @@ export async function getTimelineViewData(view: TimelineView): Promise<TimelineR
           title,
           media_type,
           source_name,
+          metadata->>'channel' AS channel_name,
+          metadata->>'channel_key' AS channel_key,
           metadata->>'entity_id' AS device_label,
           watched_at::text,
           duration_minutes
@@ -190,15 +195,25 @@ export async function getTimelineViewData(view: TimelineView): Promise<TimelineR
     )
   ]);
 
-  const events: TimelineEvent[] = eventsResult.rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    mediaType: row.media_type,
-    sourceName: row.source_name,
-    deviceLabel: row.device_label,
-    watchedAt: row.watched_at,
-    durationMinutes: row.duration_minutes
-  }));
+  const events: TimelineEvent[] = eventsResult.rows.map((row) => {
+    const brand = findChannelBrand({
+      channelKey: row.channel_key,
+      channelName: row.channel_name ?? row.source_name
+    });
+
+    return {
+      id: row.id,
+      title: row.title,
+      mediaType: row.media_type,
+      sourceName: row.source_name,
+      channelName: brand?.label ?? row.channel_name,
+      channelKey: brand?.key ?? row.channel_key,
+      channelLogoPath: brand?.logoPath ?? null,
+      deviceLabel: row.device_label,
+      watchedAt: row.watched_at,
+      durationMinutes: row.duration_minutes
+    };
+  });
 
   const groups: TimelineGroup[] = groupsResult.rows.map((row) => ({
     label: row.label,
@@ -267,7 +282,7 @@ export async function getTimelineViewData(view: TimelineView): Promise<TimelineR
       label: "Latest activity",
       value: latestEvent ? formatEventDateTime(latestEvent.watchedAt) : "None",
       detail: latestEvent
-        ? `${latestEvent.title} on ${latestEvent.sourceName}`
+        ? `${latestEvent.title} on ${latestEvent.channelName ?? latestEvent.sourceName}`
         : "No recent activity in this range"
     }
   ];
@@ -288,7 +303,7 @@ export async function getTimelineViewData(view: TimelineView): Promise<TimelineR
       label: "Longest session",
       title: longestSession?.title ?? "Duration pending",
       detail: longestSession?.durationMinutes
-        ? `${formatMinutes(longestSession.durationMinutes)} on ${longestSession.sourceName}`
+        ? `${formatMinutes(longestSession.durationMinutes)} on ${longestSession.channelName ?? longestSession.sourceName}`
         : "No completed timed sessions in this range yet"
     },
     {

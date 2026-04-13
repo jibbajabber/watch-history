@@ -1,3 +1,4 @@
+import { ChannelLogo } from "@/components/timeline/channel-logo";
 import type { TimelineResponse } from "@/lib/types";
 import { formatEventDateTime } from "@/lib/format";
 
@@ -80,7 +81,22 @@ export function TimelineGrid({ data }: { data: TimelineResponse }) {
                     fontSize: "0.92rem"
                   }}
                 >
-                  <span>{event.sourceName}</span>
+                  {event.channelName ? (
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}
+                    >
+                      {event.channelLogoPath ? (
+                        <ChannelLogo label={event.channelName} logoPath={event.channelLogoPath} />
+                      ) : null}
+                      <span>{event.channelName}</span>
+                    </span>
+                  ) : (
+                    <span>{event.sourceName}</span>
+                  )}
                   {event.deviceLabel ? <span>{event.deviceLabel.replace("media_player.", "").replaceAll("_", " ")}</span> : null}
                   {event.durationMinutes ? <span>{event.durationMinutes} min</span> : null}
                 </div>

@@ -6,6 +6,9 @@ export type TimelineEvent = {
   title: string;
   mediaType: string | null;
   sourceName: string;
+  channelName: string | null;
+  channelKey: string | null;
+  channelLogoPath: string | null;
   deviceLabel: string | null;
   watchedAt: string;
   durationMinutes: number | null;

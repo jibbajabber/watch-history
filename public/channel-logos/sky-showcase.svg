@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 52" role="img" aria-labelledby="title">
+  <title>Sky Showcase</title>
+  <rect width="96" height="52" rx="10" fill="#111827"/>
+  <text x="24" y="28" fill="#f8fafc" font-family="Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">SKY</text>
+  <text x="64" y="28" fill="#8ecae6" font-family="Arial, sans-serif" font-size="10" font-weight="700" text-anchor="middle">SHOWCASE</text>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 52" role="img" aria-labelledby="title">
+  <title>BBC One</title>
+  <rect width="96" height="52" rx="10" fill="#12151c"/>
+  <rect x="6" y="9" width="16" height="16" rx="3" fill="#f3f3f3"/>
+  <rect x="24" y="9" width="16" height="16" rx="3" fill="#f3f3f3"/>
+  <rect x="42" y="9" width="16" height="16" rx="3" fill="#f3f3f3"/>
+  <text x="14" y="21" fill="#12151c" font-family="Arial, sans-serif" font-size="9" font-weight="700" text-anchor="middle">B</text>
+  <text x="32" y="21" fill="#12151c" font-family="Arial, sans-serif" font-size="9" font-weight="700" text-anchor="middle">B</text>
+  <text x="50" y="21" fill="#12151c" font-family="Arial, sans-serif" font-size="9" font-weight="700" text-anchor="middle">C</text>
+  <text x="48" y="40" fill="#f3f3f3" font-family="Arial, sans-serif" font-size="17" font-weight="700" text-anchor="middle">ONE</text>
+</svg>

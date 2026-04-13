@@ -35,6 +35,10 @@ type HomeAssistantApiState = {
   state: string;
 };
 
+type HomeAssistantFetchInit = RequestInit & {
+  dispatcher?: Agent;
+};
+
 const caCertPath = path.join(process.cwd(), "configs", "home-assistant-ca.crt");
 
 function getAccessToken() {
@@ -118,7 +122,7 @@ async function fetchJson(url: string, token: string) {
     }
   }
 
-  return fetch(url, {
+  const init: HomeAssistantFetchInit = {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json"
@@ -126,7 +130,9 @@ async function fetchJson(url: string, token: string) {
     signal: AbortSignal.timeout(3000),
     cache: "no-store",
     dispatcher
-  });
+  };
+
+  return fetch(url, init);
 }
 
 export async function fetchHomeAssistant(url: string, token: string, timeoutMs = 3000) {
@@ -148,7 +154,7 @@ export async function fetchHomeAssistant(url: string, token: string, timeoutMs =
     }
   }
 
-  return fetch(url, {
+  const init: HomeAssistantFetchInit = {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json"
@@ -156,7 +162,9 @@ export async function fetchHomeAssistant(url: string, token: string, timeoutMs =
     signal: AbortSignal.timeout(timeoutMs),
     cache: "no-store",
     dispatcher
-  });
+  };
+
+  return fetch(url, init);
 }
 
 export async function checkHomeAssistantConnectivity(): Promise<HomeAssistantConnectivityResult> {

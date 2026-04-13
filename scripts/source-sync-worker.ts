@@ -4,6 +4,8 @@ import { readPlexConfig } from "@/lib/plex-config";
 
 const internalAppUrl = process.env.APP_INTERNAL_URL?.trim() || "http://web:3000";
 const databaseUrl = process.env.DATABASE_URL;
+const syncRequestTimeoutMs = 60_000;
+let tickInProgress = false;
 
 type SyncTarget = {
   slug: "home-assistant" | "plex";
@@ -161,7 +163,8 @@ async function shouldTriggerSync(target: SyncTarget) {
 
 async function triggerSync(target: SyncTarget) {
   const response = await fetch(`${internalAppUrl}${target.path}`, {
-    method: "POST"
+    method: "POST",
+    signal: AbortSignal.timeout(syncRequestTimeoutMs)
   });
 
   if (!response.ok) {
@@ -191,8 +194,18 @@ async function tickTarget(target: SyncTarget) {
 }
 
 async function tick() {
-  for (const target of syncTargets) {
-    await tickTarget(target);
+  if (tickInProgress) {
+    console.log("[source-sync-worker] skipping tick because the previous cycle is still running");
+    return;
+  }
+
+  tickInProgress = true;
+  try {
+    for (const target of syncTargets) {
+      await tickTarget(target);
+    }
+  } finally {
+    tickInProgress = false;
   }
 }
 

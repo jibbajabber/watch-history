@@ -74,14 +74,12 @@ Completed:
 - Feature 5: Scheduled Home Assistant sync with editable interval and overlap protection
 - Feature 6: Channel and platform branding with a curated local registry and timeline-row rendering
 - Feature 7: Plex source support with env-based connectivity, manual history import, active-session enrichment, and scheduled sync
-
-In progress:
-- Feature 8: Import reliability and source-health visibility with degraded source status and a shared warning banner
+- Feature 8: Import reliability and source-health visibility with degraded source status, a shared warning banner, and clearer `/sources` recovery state
 
 Recommended next pickup:
-1. Finish feature 8 by verifying scheduled-import failure handling end to end so failed sources retry cleanly on later worker intervals without disrupting the app
-2. Refine stale/failure visibility on `/sources`, especially the signal-to-noise of reliability details and recovery state after a source comes back
-3. Reserve feature 9 for Plex device/progress enrichment and `/sources` page polish
+1. Start feature 9 for Plex device/progress enrichment and `/sources` page polish
+2. Remove or replace low-value internal planning copy on `/sources` while keeping the new reliability signals intact
+3. Confirm whether any additional source priorities should follow Plex
 
 ## Development Workflow
 

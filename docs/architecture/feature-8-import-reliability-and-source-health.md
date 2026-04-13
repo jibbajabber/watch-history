@@ -117,15 +117,14 @@ Exit criteria:
 
 ## Current Implementation Status
 
-Implemented so far:
-- failed manual imports now return to `/sources` with a non-blocking error banner instead of surfacing a server-action stack trace
-- recent failed imports and stale scheduled sources now feed source health status
-- the shared app shell can show a compact `Source Health` banner on the main timeline pages when an active source needs attention
+Implemented:
+- failed manual imports return to `/sources` with a non-blocking success or error banner instead of surfacing a server-action stack trace
+- recent failed imports and stale scheduled sources feed source health status, including `Failing` and `Stale` states
+- the shared app shell shows a compact `Source Health` banner on the main timeline pages when an active source needs attention
+- `/sources` now exposes a dedicated import-health block with last success, last failure, and recovery visibility
+- the scheduled sync worker now prevents overlapping tick cycles and applies a request timeout so one source cannot hang the full worker loop
 
-Still to finish before feature 8 is complete:
-- verify and, if needed, harden scheduled-import failure behavior end to end so one failing source never disrupts later worker ticks
-- refine stale/failure visibility on `/sources` so the most useful reliability details are obvious without reading low-value implementation copy
-- confirm the recovery path is clear when a source comes back, including how quickly health returns from `Failing` or `Stale` to normal
+Feature 8 can now be treated as complete for the current reliability scope.
 
 ## Open Questions
 

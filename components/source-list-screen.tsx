@@ -195,6 +195,48 @@ export function SourceListScreen({
               </div>
 
               <section
+                className="source-stat-card"
+                style={{
+                  gap: "12px",
+                  border:
+                    source.status === "attention"
+                      ? "1px solid rgba(255, 191, 105, 0.36)"
+                      : source.status === "blocked"
+                        ? "1px solid rgba(255, 127, 106, 0.36)"
+                        : "1px solid var(--line)"
+                }}
+              >
+                <div style={{ display: "grid", gap: "4px" }}>
+                  <span className="eyebrow">Import health</span>
+                  <strong style={{ fontSize: "1rem" }}>{source.healthLabel}</strong>
+                  <p className="muted" style={{ margin: 0, lineHeight: 1.6 }}>
+                    {source.healthDetail}
+                  </p>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                    gap: "10px"
+                  }}
+                >
+                  <div className="source-stat-card">
+                    <span className="muted">Last success</span>
+                    <strong>{source.lastSuccessLabel}</strong>
+                  </div>
+                  <div className="source-stat-card">
+                    <span className="muted">Last failure</span>
+                    <strong>{source.lastFailureLabel}</strong>
+                  </div>
+                  <div className="source-stat-card">
+                    <span className="muted">Recovery</span>
+                    <strong>{source.recoveryLabel ?? "Not needed"}</strong>
+                  </div>
+                </div>
+              </section>
+
+              <section
                 style={{
                   display: "grid",
                   gap: "10px"

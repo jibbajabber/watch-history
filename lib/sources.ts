@@ -135,12 +135,32 @@ function isSourceStale(
   return elapsedMs > syncIntervalMinutes * 2 * 60 * 1000;
 }
 
+function getRecoveryLabel(importRow: ImportRow | null) {
+  if (!importRow?.latest_failed_started_at || !importRow.latest_success_started_at) {
+    return null;
+  }
+
+  const lastFailure = new Date(importRow.latest_failed_started_at).getTime();
+  const lastSuccess = new Date(importRow.latest_success_started_at).getTime();
+
+  if (lastSuccess <= lastFailure) {
+    return null;
+  }
+
+  return `Recovered on ${formatLatestImport(importRow.latest_success_started_at)}`;
+}
+
 type HomeAssistantDerivedStatus = Omit<
   SourceStatus,
   | "slug"
   | "displayName"
   | "kindLabel"
   | "description"
+  | "healthLabel"
+  | "healthDetail"
+  | "lastSuccessLabel"
+  | "lastFailureLabel"
+  | "recoveryLabel"
   | "expectedEnvVars"
   | "latestImportLabel"
   | "configStatusLabel"
@@ -416,6 +436,13 @@ export async function getSourceStatuses(): Promise<SourceStatus[]> {
       hasRecentFailure: hasLaterFailure(latestImport),
       isStale: isSourceStale(freshnessTime, syncEnabled, syncIntervalMinutes)
     };
+    const lastSuccessLabel = latestImport?.latest_success_started_at
+      ? formatLatestImport(latestImport.latest_success_started_at)
+      : "Never";
+    const lastFailureLabel = latestImport?.latest_failed_started_at
+      ? formatLatestImport(latestImport.latest_failed_started_at)
+      : "None";
+    const recoveryLabel = getRecoveryLabel(latestImport);
 
     const configuredItems = isHomeAssistant
       ? configResult.ok
@@ -487,6 +514,26 @@ export async function getSourceStatuses(): Promise<SourceStatus[]> {
           importHealth
         )
       : getPlexStatus(envReady, latestImportAt, plexConnectivity.ok, importHealth);
+    const healthLabel =
+      derivedStatus.status === "attention" && importHealth.hasRecentFailure
+        ? "Recent import failure"
+        : derivedStatus.status === "attention" && importHealth.isStale
+          ? "Import overdue"
+          : derivedStatus.status === "blocked"
+            ? "Configuration blocked"
+            : latestImport?.latest_status === "completed"
+              ? "Healthy"
+              : "Not imported yet";
+    const healthDetail =
+      importHealth.hasRecentFailure
+        ? formatRelativeFailure(latestImport?.latest_failed_error_message ?? null)
+        : importHealth.isStale
+          ? `No completed import within the expected ${syncIntervalMinutes} minute sync window.`
+          : recoveryLabel
+            ? `${recoveryLabel}.`
+            : latestImport?.latest_status === "completed"
+              ? "Recent imports are landing normally."
+              : "This source has not completed an import yet.";
 
     return {
       slug: registrySource.slug,
@@ -497,6 +544,11 @@ export async function getSourceStatuses(): Promise<SourceStatus[]> {
       latestImportLabel: latestImport
         ? `${formatLatestImport(latestImport.latest_started_at ?? latestImportAt)} (${latestImport.latest_status})`
         : "Never",
+      healthLabel,
+      healthDetail,
+      lastSuccessLabel,
+      lastFailureLabel,
+      recoveryLabel,
       configStatusLabel: isHomeAssistant
         ? configResult.ok
           ? "Configured"

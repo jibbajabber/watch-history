@@ -2,6 +2,8 @@
 
 This repository is for planning and building a web application that aggregates watch history from multiple media sources into a unified timeline.
 
+![Watch History main screen](public/static/watch-history-main.png)
+
 ## Documentation Role
 
 `README.md` is the primary human-facing overview of the repository. As the project evolves, it should explain:

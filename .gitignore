@@ -9,4 +9,4 @@ configs/home-assistant-ca.crt
 configs/plex.yaml
 .idea/
 tsconfig.tsbuildinfo
-sources/plex/
+docs/sources/plex/

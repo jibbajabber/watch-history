@@ -62,7 +62,7 @@ The current application is a working first version:
 - the UI uses live imported data rather than mocked watch-history content
 
 Current planning is organized as feature-specific architecture documents under `docs/architecture`.
-Feature 6 is complete: recognized channels and platform brands are normalized through `lib/channels.ts`, mapped to curated SVG assets in `public/channel-logos/`, and rendered in timeline rows with text fallback for unmapped labels.
+
 
 ## Progress And TODO
 

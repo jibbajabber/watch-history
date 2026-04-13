@@ -19,7 +19,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["npm", "exec", "tsx", "scripts/home-assistant-sync-worker.ts"]
+    command: ["npm", "exec", "tsx", "scripts/source-sync-worker.ts"]
     env_file:
       - .env
     volumes:

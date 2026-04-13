@@ -75,7 +75,7 @@ export type SourceStatus = {
   nextStepBody: string;
   expectedEnvVars: string[];
   configStatusLabel: string;
-  configuredEntities: string[];
+  configuredItems: string[];
   connectionDetails: string[];
   syncEnabled: boolean;
   syncIntervalMinutes: number;

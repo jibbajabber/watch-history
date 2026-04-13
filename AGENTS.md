@@ -174,12 +174,18 @@ Use this section to record decisions as they are made.
 | 2026-04-13 | The importer should prefer `media_channel` over `media_title` when deriving channel identity. | Raw Home Assistant attributes remain preserved in `watch_events.metadata.attributes` for future refinement of channel matching. |
 | 2026-04-13 | Feature 6 is complete with channel and platform badges backed by a curated local registry. | Timeline rows now render recognized live-channel and app/platform brands from normalized Home Assistant metadata with text fallback for unknown labels. |
 | 2026-04-13 | Feature 7 should add Plex as the next source integration. | The first Plex milestone should follow the same source-first, Docker-first, idempotent import model used by the existing Home Assistant flow. |
+| 2026-04-13 | Feature 7 should use Plex history rows as the first v1 watch-event source. | The sampled `/status/sessions/history/all` payload is sufficient for raw import and completed-watch normalization, while device/progress enrichment remains optional follow-up work. |
+| 2026-04-13 | Feature 7 implementation starts with env-based Plex connectivity and manual import. | Plex uses `PLEX_BASE_URL` and `PLEX_TOKEN`; manual import rebuilds Plex-derived `watch_events` from `/status/sessions/history/all` while preserving raw history rows. |
+| 2026-04-13 | Plex imports should tolerate a short post-playback handoff gap between current sessions and durable history. | Plex does not document an exact moment when stopped playback appears in `/status/sessions/history/all`, so this should be treated as normal source behavior rather than a timezone bug. |
+| 2026-04-13 | Feature 7 should include scheduled Plex sync before being marked complete. | Plex scheduled sync should run inside the same Docker-managed worker model as Home Assistant, using a non-secret `configs/plex.yaml` sync config and source-specific overlap protection. |
+| 2026-04-13 | Feature 8 should focus on import reliability and source-health visibility. | Manual and scheduled imports should fail safely, retry on later intervals, update source health clearly, and surface a non-blocking warning banner in the shared app shell when relevant. |
+| 2026-04-13 | Feature 9 should combine Plex enrichment with `/sources` UI cleanup. | Device/progress enrichment should only ship when the Plex data is reliable enough, and the sources page should remove internal-facing planning copy in favor of clearer aligned operational controls. |
 
 ## Next Discovery Steps
 
-1. Decide whether the first Plex import path should be API-based, file-based, or both.
-2. Define the Plex credential and configuration model for Docker Compose.
-3. Begin implementation from `docs/architecture/feature-7-plex-source-support.md`.
+1. Implement feature 8 around reliability improvements and source-health visibility.
+2. Reserve feature 9 for Plex device/progress enrichment and `/sources` page polish.
+3. Confirm whether any additional source priorities should follow Plex.
 
 ## Feature Progress
 
@@ -195,5 +201,9 @@ Use this section to record decisions as they are made.
   Scheduled Home Assistant sync is implemented and configurable from the UI.
 - Feature 6: Complete
   Channel and platform branding is implemented with a curated local registry, normalized mappings, and timeline-row rendering.
-- Feature 7: Planned
-  Plex source support is the next integration milestone and now has an architecture note.
+- Feature 7: Complete
+  Plex source support is implemented with env-based connectivity, manual history import, active-session enrichment, and scheduled sync.
+- Feature 8: Planned
+  Import reliability, source-health status, and shared warning-banner behavior need to be implemented.
+- Feature 9: Planned
+  Plex enrichment and `/sources` UI polish need to be implemented after reliability work.

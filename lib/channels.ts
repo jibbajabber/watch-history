@@ -73,6 +73,12 @@ const channelBrands: ChannelBrand[] = [
     aliases: ["hbo max"]
   },
   {
+    key: "plex",
+    label: "Plex",
+    logoPath: "/channel-logos/plex.svg",
+    aliases: ["plex"]
+  },
+  {
     key: "sky-news",
     label: "Sky News",
     logoPath: "/channel-logos/sky-news.svg",

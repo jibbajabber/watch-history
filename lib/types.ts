@@ -73,6 +73,11 @@ export type SourceStatus = {
   latestImportLabel: string;
   nextStepTitle: string;
   nextStepBody: string;
+  healthLabel: string;
+  healthDetail: string;
+  lastSuccessLabel: string;
+  lastFailureLabel: string;
+  recoveryLabel: string | null;
   expectedEnvVars: string[];
   configStatusLabel: string;
   configuredItems: string[];

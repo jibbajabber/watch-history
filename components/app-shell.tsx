@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getSourceHealthNotice } from "@/lib/sources";
 import type { AppSection, TimelineView } from "@/lib/types";
 
 const views: Array<{ href: string; label: string; view: AppSection }> = [
@@ -38,7 +39,7 @@ const sectionCards: Record<
   }
 };
 
-export function AppShell({
+export async function AppShell({
   activeView,
   children
 }: {
@@ -46,6 +47,7 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const sectionCard = sectionCards[activeView];
+  const healthNotice = await getSourceHealthNotice();
 
   return (
     <main className="page-shell">
@@ -107,20 +109,48 @@ export function AppShell({
                 </div>
 
                 <div
-                  className="glass-panel"
                   style={{
-                    borderRadius: "20px",
-                    padding: "16px 18px",
                     minWidth: "16rem",
                     display: "grid",
-                    gap: "10px"
+                    gap: "12px"
                   }}
                 >
-                  <span className="eyebrow">{sectionCard.eyebrow}</span>
-                  <strong style={{ fontSize: "1rem" }}>{sectionCard.title}</strong>
-                  <p className="muted" style={{ margin: 0, lineHeight: 1.6, fontSize: "0.94rem" }}>
-                    {sectionCard.body}
-                  </p>
+                  <div
+                    className="glass-panel"
+                    style={{
+                      borderRadius: "20px",
+                      padding: "16px 18px",
+                      display: "grid",
+                      gap: "10px"
+                    }}
+                  >
+                    <span className="eyebrow">{sectionCard.eyebrow}</span>
+                    <strong style={{ fontSize: "1rem" }}>{sectionCard.title}</strong>
+                    <p className="muted" style={{ margin: 0, lineHeight: 1.6, fontSize: "0.94rem" }}>
+                      {sectionCard.body}
+                    </p>
+                  </div>
+
+                  {healthNotice ? (
+                    <div
+                      className="glass-panel"
+                      style={{
+                        borderRadius: "20px",
+                        padding: "16px 18px",
+                        display: "grid",
+                        gap: "10px",
+                        border: "1px solid rgba(255, 191, 105, 0.34)",
+                        background:
+                          "linear-gradient(180deg, rgba(255, 191, 105, 0.08), rgba(255, 255, 255, 0.03))"
+                      }}
+                    >
+                      <span className="eyebrow">Source Health</span>
+                      <strong style={{ fontSize: "1rem" }}>{healthNotice.title}</strong>
+                      <p className="muted" style={{ margin: 0, lineHeight: 1.6, fontSize: "0.92rem" }}>
+                        {healthNotice.body}
+                      </p>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 

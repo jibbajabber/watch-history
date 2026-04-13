@@ -180,11 +180,13 @@ Use this section to record decisions as they are made.
 | 2026-04-13 | Feature 7 should include scheduled Plex sync before being marked complete. | Plex scheduled sync should run inside the same Docker-managed worker model as Home Assistant, using a non-secret `configs/plex.yaml` sync config and source-specific overlap protection. |
 | 2026-04-13 | Feature 8 should focus on import reliability and source-health visibility. | Manual and scheduled imports should fail safely, retry on later intervals, update source health clearly, and surface a non-blocking warning banner in the shared app shell when relevant. |
 | 2026-04-13 | Feature 9 should combine Plex enrichment with `/sources` UI cleanup. | Device/progress enrichment should only ship when the Plex data is reliable enough, and the sources page should remove internal-facing planning copy in favor of clearer aligned operational controls. |
+| 2026-04-13 | Feature 8 implementation starts with degraded source status and a shared shell warning banner. | Recent failed imports and stale scheduled sources should be visible without blocking the app, while scheduled retries continue on the normal worker interval. |
+| 2026-04-13 | Feature 8 is complete with resilient import actions, worker hardening, and source-health visibility. | Failed manual imports now return safely to `/sources`, scheduled sync ticks are guarded against overlap and hangs, and the UI surfaces failing, stale, and recovered source states without blocking the app. |
 
 ## Next Discovery Steps
 
-1. Implement feature 8 around reliability improvements and source-health visibility.
-2. Reserve feature 9 for Plex device/progress enrichment and `/sources` page polish.
+1. Start feature 9 for Plex device/progress enrichment and `/sources` page polish.
+2. Preserve the new reliability/status signals while simplifying low-value internal copy on `/sources`.
 3. Confirm whether any additional source priorities should follow Plex.
 
 ## Feature Progress
@@ -203,7 +205,7 @@ Use this section to record decisions as they are made.
   Channel and platform branding is implemented with a curated local registry, normalized mappings, and timeline-row rendering.
 - Feature 7: Complete
   Plex source support is implemented with env-based connectivity, manual history import, active-session enrichment, and scheduled sync.
-- Feature 8: Planned
-  Import reliability, source-health status, and shared warning-banner behavior need to be implemented.
+- Feature 8: Complete
+  Import reliability, source-health status, safe manual failure handling, worker resilience, and shared warning-banner behavior are implemented.
 - Feature 9: Planned
   Plex enrichment and `/sources` UI polish need to be implemented after reliability work.

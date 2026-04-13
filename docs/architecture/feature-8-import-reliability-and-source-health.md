@@ -115,6 +115,17 @@ Exit criteria:
 - source status reflects recent failure health, not just connectivity readiness
 - timeline pages remain usable and can show a compact warning banner when relevant
 
+## Current Implementation Status
+
+Implemented:
+- failed manual imports return to `/sources` with a non-blocking success or error banner instead of surfacing a server-action stack trace
+- recent failed imports and stale scheduled sources feed source health status, including `Failing` and `Stale` states
+- the shared app shell shows a compact `Source Health` banner on the main timeline pages when an active source needs attention
+- `/sources` now exposes a dedicated import-health block with last success, last failure, and recovery visibility
+- the scheduled sync worker now prevents overlapping tick cycles and applies a request timeout so one source cannot hang the full worker loop
+
+Feature 8 can now be treated as complete for the current reliability scope.
+
 ## Open Questions
 
 - how long should a failed source remain visually degraded before the UI returns to normal after recovery?

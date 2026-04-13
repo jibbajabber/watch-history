@@ -2,11 +2,11 @@
 
 Watch history consumes the content you watch as you go to transform it into a unified timeline.
 
-We all have those great shows we watch that we want to recommend to friends and family, but with so many platforms and
-  sources, it's not always easy to recall what the best of the best were.
+We all have that great content we enjoyed watching the, one that we absolutely want to recommend to friends and family,
+  but with so many platforms and sources, it's not always easy to recall what the best of the best were.
 
 Watch history aims to try to solve that, it collects your viewing data from sources it can talk to, it will then in future
-  allow you to pick out the ones that are special that can go on to a favourties/recommeds list
+  allow you to pick out the ones that are special that can go on to form a favourties/recommeds/watch again list.
 
 ![Watch History main screen](public/static/watch-history-main.png)
 

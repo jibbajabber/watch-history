@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, type QueryResultRow } from "pg";
 
 let pool: Pool | undefined;
 
@@ -22,7 +22,10 @@ export function getPool() {
   return pool;
 }
 
-export async function query<T>(text: string, params: unknown[] = []) {
+export async function query<T extends QueryResultRow = QueryResultRow>(
+  text: string,
+  params: unknown[] = []
+) {
   return getPool().query<T>(text, params);
 }
 
@@ -37,4 +40,3 @@ export async function sql(
 
   return query(text, values);
 }
-

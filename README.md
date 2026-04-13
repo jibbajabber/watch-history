@@ -15,16 +15,20 @@ This repository is for planning and building a web application that aggregates w
 - `AGENTS.md`: Working project-definition document, collaboration guidance, engineering standards, and decision log.
 - `app/`: Next.js App Router entrypoints, API routes, and global styles for the web application.
 - `components/`: UI components for the application shell and timeline views.
+- `components/timeline/channel-logo.tsx`: Compact channel-logo renderer for timeline entries.
 - `configs/home-assistant-ca.crt.example`: Example placeholder for an optional Home Assistant CA certificate file when using a private CA.
 - `configs/home-assistant.yaml.example`: Example non-secret Home Assistant source configuration for the base URL and tracked entity IDs.
 - `db/init/`: PostgreSQL initialization scripts for the first application schema.
-- `doc/architecture/feature-1-app-scaffold.md`: Review-first implementation plan for the application scaffold and weekly, monthly, and yearly views.
-- `doc/architecture/feature-2-home-assistant-auth.md`: Review-first implementation plan for Home Assistant authentication.
-- `doc/architecture/feature-3-home-assistant-skyq-history.md`: Review-first implementation plan for pulling Sky Q watch history from Home Assistant entities.
-- `doc/architecture/feature-4-ui-summaries-and-analytics.md`: Review-first implementation plan for richer timeline summaries and analytics.
-- `doc/architecture/feature-5-scheduled-home-assistant-sync.md`: Review-first implementation plan for scheduled Home Assistant sync.
-- `doc/architecture/feature-6-channel-logos.md`: Review-first implementation plan for channel-logo discovery and rendering.
+- `docs/architecture/feature-1-app-scaffold.md`: Review-first implementation plan for the application scaffold and weekly, monthly, and yearly views.
+- `docs/architecture/feature-2-home-assistant-auth.md`: Review-first implementation plan for Home Assistant authentication.
+- `docs/architecture/feature-3-home-assistant-skyq-history.md`: Review-first implementation plan for pulling Sky Q watch history from Home Assistant entities.
+- `docs/architecture/feature-4-ui-summaries-and-analytics.md`: Review-first implementation plan for richer timeline summaries and analytics.
+- `docs/architecture/feature-5-scheduled-home-assistant-sync.md`: Review-first implementation plan for scheduled Home Assistant sync.
+- `docs/architecture/feature-6-channel-logos.md`: Review-first implementation plan for channel-logo discovery and rendering.
+- `docs/architecture/feature-7-plex-source-support.md`: Review-first implementation plan for the first Plex source integration.
 - `lib/`: Server-side data access, formatting, and shared type definitions.
+- `lib/channels.ts`: Channel normalization and local logo-registry mapping for Sky Q channel branding.
+- `public/channel-logos/`: Curated local SVG channel logo assets for recognized channels.
 - `scripts/home-assistant-sync-worker.ts`: Scheduled Home Assistant sync worker for Docker Compose.
 - `Dockerfile`: Canonical application container definition for local development.
 - `docker-compose.yml`: Container orchestration for the web application and PostgreSQL database.
@@ -41,7 +45,8 @@ The current application is a working first version:
 - scheduled sync is available through Docker Compose
 - the UI uses live imported data rather than mocked watch-history content
 
-Current planning is organized as feature-specific architecture documents under `doc/architecture`.
+Current planning is organized as feature-specific architecture documents under `docs/architecture`.
+Feature 6 is complete: recognized channels and platform brands are normalized through `lib/channels.ts`, mapped to curated SVG assets in `public/channel-logos/`, and rendered in timeline rows with text fallback for unmapped labels.
 
 ## Progress And TODO
 
@@ -51,14 +56,12 @@ Completed:
 - Feature 3: Sky Q history import from Home Assistant entities
 - Feature 4: Timeline summaries, analytics, and improved activity overview
 - Feature 5: Scheduled Home Assistant sync with editable interval and overlap protection
-
-Paused:
-- Feature 6: Channel logos
+- Feature 6: Channel and platform branding with a curated local registry and timeline-row rendering
 
 Recommended next pickup:
-1. Run the discovery phase from `doc/architecture/feature-6-channel-logos.md`
-2. Determine which Home Assistant/Sky Q fields are stable enough to use as canonical channel identifiers
-3. Decide whether logos should come from curated local assets, a mapped registry, or another documented source
+1. Decide whether the first Plex import path should be API-based, file-based, or both
+2. Define the Plex credential and configuration model for the Docker Compose environment
+3. Implement the first Plex source registration and connectivity flow described in `docs/architecture/feature-7-plex-source-support.md`
 
 ## Development Workflow
 
@@ -127,6 +130,7 @@ Normalization notes:
 - generic device-only rows such as `Sky Q Bedroom` or `Sky Q Livingroom` are filtered out unless Home Assistant exposes meaningful programme metadata
 - real timeline entries preserve channel/source context and device context separately
 - current entity state is merged into import processing so currently playing content can appear even when history has not yet emitted a fresh transition
+- recognized channels now persist a high-confidence `metadata.channel_key` when matched by the local registry, while unknown channels remain text-only
 
 ## Scheduled Sync
 

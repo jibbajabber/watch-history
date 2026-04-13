@@ -8,7 +8,7 @@ This feature should improve recognition and reduce reliance on raw channel text 
 
 ## Product Goal
 
-Show recognizable channel branding alongside imported watch events and source summaries where a stable channel identity can be determined.
+Show recognizable channel or platform branding alongside imported watch events and source summaries where a stable identity can be determined.
 
 ## Important Discovery Requirement
 
@@ -24,6 +24,20 @@ The implementation should not assume that:
 - `media_title` alone is always a reliable channel key
 - channel names are consistent enough to match logos without normalization
 - external logo sources are acceptable without a review of quality, licensing, and stability
+
+## Initial Discovery Findings
+
+Initial discovery has been completed against the current importer and timeline model, not against a new live-data sample yet.
+
+What the code currently gives us:
+- `watch_events.metadata.attributes` preserves the raw Home Assistant attribute payload for each normalized session
+- `watch_events.metadata.channel` stores the importer-derived channel text
+- the importer can now prefer `media_channel`, then `channel`, then `channel_name`, then `media_title` when deriving channel identity
+- recognized channels can persist `watch_events.metadata.channel_key` without a schema migration
+
+Current implication:
+- the feature can start without changing the database schema
+- real-data validation is still needed to expand the registry and confirm additional Sky Q variants
 
 ## Scope
 
@@ -64,11 +78,20 @@ This decision should be documented before implementation proceeds.
 
 Prefer a simple and durable approach:
 - normalize channel identifiers into a canonical internal key
+- allow platform/app brands in the same badge system when Home Assistant clearly reports app usage rather than a live channel
 - map canonical keys to known logo assets
 - render logos only when confidence is high
 - fall back cleanly to text when no mapping exists
 
 For an initial version, a curated local mapping is likely the safest path.
+
+This initial implementation chooses that path:
+- commit a curated local set of SVG channel marks under `public/channel-logos/`
+- map stable canonical keys in `lib/channels.ts`
+- render logos only for recognized keys
+- fall back to text for everything else
+
+The initial SVG set is intentionally repo-local and static so the app does not depend on external runtime logo lookups.
 
 ## Potential Implementation Shape
 
@@ -96,6 +119,24 @@ For an initial version, a curated local mapping is likely the safest path.
 - timeline entries can show channel logos when a stable mapping exists
 - unknown or unmapped channels fall back to clean text rendering
 - the app remains usable even when no logo is available
+
+## Initial Implementation Notes
+
+The first implementation layer now exists:
+- `lib/channels.ts` defines channel aliases, canonical keys, and asset paths
+- `lib/home-assistant-import.ts` persists a high-confidence `channel_key` for recognized channels
+- `lib/timeline.ts` resolves channel branding for both new and older rows
+- `components/timeline/timeline-grid.tsx` renders logos in timeline rows when a mapping exists
+
+Current normalization policy includes:
+- HD and similar transport suffixes may normalize into a cleaner canonical brand, for example `Sky Action HD` to `Sky Action`
+- app/platform entries such as `BBC iPlayer` and `HBO Max` may render branded badges when the imported attributes clearly identify them as apps
+- awkward Sky Q labels may normalize to a clearer parent brand when the identity is unambiguous, for example `Disney+CineHD` to `Disney+`
+
+Remaining follow-up work:
+- validate real imported channel variants from Home Assistant history
+- widen the curated registry beyond the initial BBC, ITV, Channel 4/5, and Sky entries
+- decide whether highlights or summary surfaces should also adopt channel branding
 
 ## Open Questions
 

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 52" role="img" aria-labelledby="title">
+  <title>BBC iPlayer</title>
+  <rect width="96" height="52" rx="10" fill="#15121f"/>
+  <rect x="7" y="9" width="14" height="14" rx="3" fill="#f3f3f3"/>
+  <rect x="23" y="9" width="14" height="14" rx="3" fill="#f3f3f3"/>
+  <rect x="39" y="9" width="14" height="14" rx="3" fill="#f3f3f3"/>
+  <text x="14" y="19" fill="#15121f" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">B</text>
+  <text x="30" y="19" fill="#15121f" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">B</text>
+  <text x="46" y="19" fill="#15121f" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">C</text>
+  <path d="M60 16l16 10-16 10z" fill="#ff4fa3"/>
+  <text x="48" y="43" fill="#ff4fa3" font-family="Arial, sans-serif" font-size="10" font-weight="700" text-anchor="middle">iPLAYER</text>
+</svg>

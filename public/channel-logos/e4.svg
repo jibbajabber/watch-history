@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 52" role="img" aria-labelledby="title">
+  <title>E4</title>
+  <rect width="96" height="52" rx="10" fill="#ffffff"/>
+  <path d="M21 12h18v10H31v7h8v11H21z" fill="#6a00f4"/>
+  <path d="M47 12h13v18h10v11H60v-6H47z" fill="#6a00f4"/>
+  <text x="48" y="47" fill="#6a00f4" font-family="Arial, sans-serif" font-size="9" font-weight="700" text-anchor="middle">E4</text>
+</svg>

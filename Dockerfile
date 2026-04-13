@@ -9,10 +9,10 @@ RUN npm install
 COPY app ./app
 COPY components ./components
 COPY lib ./lib
+COPY public ./public
 COPY db ./db
 COPY README.md ./README.md
 
 EXPOSE 3000
 
 CMD ["npm", "run", "dev"]
-

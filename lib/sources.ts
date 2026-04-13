@@ -89,6 +89,10 @@ type HomeAssistantDerivedStatus = Omit<
   | "configStatusLabel"
   | "configuredEntities"
   | "connectionDetails"
+  | "syncEnabled"
+  | "syncIntervalMinutes"
+  | "syncStatusLabel"
+  | "nextSyncLabel"
 >;
 
 function getHomeAssistantStatus(

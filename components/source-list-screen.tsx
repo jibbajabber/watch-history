@@ -25,11 +25,11 @@ function getTone(status: SourceStatus["status"]) {
 
 export function SourceListScreen({
   sources,
-  importAction,
+  importSourceAction,
   updateSyncAction
 }: {
   sources: SourceStatus[];
-  importAction: () => Promise<void>;
+  importSourceAction: (formData: FormData) => Promise<void>;
   updateSyncAction: (formData: FormData) => Promise<void>;
 }) {
   return (
@@ -44,7 +44,7 @@ export function SourceListScreen({
             lineHeight: 0.98
           }}
         >
-          Connect to Home Assistant first, then extract Sky Q history cleanly.
+          Connect your watch-history sources and import real activity.
         </h2>
         <p
           className="muted"
@@ -54,9 +54,8 @@ export function SourceListScreen({
             fontSize: "1rem"
           }}
         >
-          The first source is Home Assistant. This screen tracks whether the app has enough
-          configuration to authenticate, and whether the source is ready for the Sky Q entity
-          history work.
+          This screen tracks source readiness, authentication, and import status as the app grows
+          from Home Assistant into additional media history integrations such as Plex.
         </p>
       </div>
 
@@ -163,9 +162,10 @@ export function SourceListScreen({
                 </p>
               </section>
 
-              {source.slug === "home-assistant" ? (
+              {source.slug === "home-assistant" || source.slug === "plex" ? (
                 <section style={{ display: "grid", gap: "14px" }}>
-                  <form action={importAction}>
+                  <form action={importSourceAction}>
+                    <input type="hidden" name="source_slug" value={source.slug} />
                     <button
                       type="submit"
                       style={{
@@ -180,11 +180,12 @@ export function SourceListScreen({
                         cursor: "pointer"
                       }}
                     >
-                      Import Sky Q history
+                      {source.slug === "home-assistant" ? "Import Sky Q history" : "Import Plex history"}
                     </button>
                   </form>
 
                   <form action={updateSyncAction} className="source-stat-card">
+                    <input type="hidden" name="source_slug" value={source.slug} />
                     <div style={{ display: "grid", gap: "12px" }}>
                       <div style={{ display: "grid", gap: "4px" }}>
                         <span className="eyebrow">Scheduled sync</span>
@@ -271,7 +272,7 @@ export function SourceListScreen({
                   gap: "8px"
                 }}
               >
-                <span className="eyebrow">Configured entities</span>
+                <span className="eyebrow">Source configuration</span>
                 <div
                   style={{
                     display: "flex",
@@ -279,10 +280,10 @@ export function SourceListScreen({
                     flexWrap: "wrap"
                   }}
                 >
-                  {source.configuredEntities.length > 0 ? (
-                    source.configuredEntities.map((entityId) => (
+                  {source.configuredItems.length > 0 ? (
+                    source.configuredItems.map((item) => (
                       <code
-                        key={entityId}
+                        key={item}
                         style={{
                           padding: "8px 10px",
                           borderRadius: "10px",
@@ -291,11 +292,11 @@ export function SourceListScreen({
                           fontSize: "0.84rem"
                         }}
                       >
-                        {entityId}
+                        {item}
                       </code>
                     ))
                   ) : (
-                    <span className="muted">No entities configured yet.</span>
+                    <span className="muted">No source configuration detected yet.</span>
                   )}
                 </div>
               </section>

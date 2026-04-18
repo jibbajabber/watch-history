@@ -41,7 +41,7 @@ The result is a misleading timeline:
 - long same-channel sessions lose detail
 - repeated imports can rebuild history around the newest programme snapshot rather than the full watched sequence
 
-Confirmed evidence from `docs/sources/skyq/same-channel-programme-change.md`:
+Confirmed evidence from `docs/sources/homeassistant/same-channel-programme-change.md`:
 - the persisted raw Home Assistant rows for `media_player.sky_q_bedroom` contain three distinct programmes in order: `The Big Bang Theory`, `Ffermio`, and `Gwladfa: Gwilym Bowen Rhys`
 - the normalized `watch_events` for the same time window contain only `The Big Bang Theory`
 - therefore the source data did not lose `Ffermio` or `Gwladfa`; the loss happened in the normalized rebuild path

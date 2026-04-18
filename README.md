@@ -50,6 +50,20 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `.env.example`: Required environment variables for the Docker Compose environment.
 - `README.md`: Repository overview and high-level documentation index.
 
+## Feature Workflow
+
+Feature work in this repository follows a spec-first workflow:
+- start by creating or updating a feature spec under `docs/architecture/<feature-name>.md`
+- review that spec with the user before implementation
+- capture open questions and gather real source data where needed before locking the design
+- update `AGENTS.md`, `README.md`, and any other relevant docs when the feature scope or status becomes clearer
+- ask the user whether they want a feature branch created before implementation starts
+- if a branch is created, name it from the feature name without the `.md` suffix
+- if the local Docker Compose stack is not already running, ask the user before starting it because their active environment may be a remote Docker host
+- review `README.md` at the end of the feature and update it where needed to mark the feature complete and document any new files, changed responsibilities, or workflow changes
+- once the feature is complete, ask whether the user wants the branch pushed and whether they want a PR raised
+- if a PR is raised, title it from the feature or branch name by replacing hyphens with spaces and capitalizing each word, then use a short description that explains what the feature achieves
+
 ## Current Status
 
 The current application is a working first version:
@@ -76,15 +90,18 @@ Completed:
 - Feature 6: Channel and platform branding with a curated local registry and timeline-row rendering
 - Feature 7: Plex source support with env-based connectivity, manual history import, active-session enrichment, and scheduled sync
 - Feature 8: Import reliability and source-health visibility with degraded source status, a shared warning banner, and clearer `/sources` recovery state
+- Feature 9: Home Assistant current-playing continuity with watch-event rebuilding from persisted raw history so same-channel Sky Q programme transitions survive repeated imports
 
 Recommended next pickup:
-1. Start feature 9 for Sky Q current-playing continuity so same-channel programme changes are preserved in watch history
-2. Validate how Home Assistant history and current-state snapshots behave when Sky Q stays in `playing` across programme boundaries
-3. Move Plex enrichment and `/sources` page polish to feature 10 after the Sky Q continuity gap is addressed
+1. Start feature 10 for Plex enrichment and `/sources` page polish
+2. Preserve the completed Home Assistant continuity behavior while improving Plex detail and simplifying `/sources`
+3. Confirm whether any additional source priorities should follow Plex
 
 ## Development Workflow
 
 The supported development workflow runs inside Docker.
+
+The repository `docker-compose.yml` is the canonical local deployment definition for the application stack. In some sessions, however, the live application and data may be running on a remote Docker server instead of the local machine. If the local stack is not already running, do not assume it should be started automatically; confirm with the user first and use remote user-provided command output when that remote environment is the active source of truth.
 
 1. Create `.env` from `.env.example`.
 2. Create `configs/home-assistant.yaml` from `configs/home-assistant.yaml.example`.
@@ -120,6 +137,10 @@ DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGR
 
 Secrets for future external integrations should follow the same pattern: define variable names in documentation, provide real values through the env file, and inject them into the Docker Compose environment.
 
+Repository workflow note:
+- agents should not inspect `.env`, `.env.*`, or similar secret-bearing files unless the user explicitly asks for that in the current task
+- when secret-backed behavior needs validation, prefer user-run commands, sanitized outputs, or explicit user-provided values over direct secret-file inspection
+
 For Home Assistant, the current plan is to keep the non-secret base URL and tracked entity IDs in YAML, and supply the long-lived access token through the env file so the application can authenticate server-side and query entity history through the supported APIs.
 
 `APP_TIMEZONE` controls how timestamps are rendered and how timeline groupings are labeled in the application. For a UK deployment, use:
@@ -142,17 +163,18 @@ When you trigger the import, the app:
 - calls Home Assistant's `/api/history/period/<timestamp>` endpoint for the configured entities
 - supplements the historical data with the current entity state when needed
 - preserves raw state-history records in `raw_import_records`
-- rebuilds normalized Sky Q watch sessions into `watch_events`
+- rebuilds normalized Sky Q watch sessions into `watch_events` from the persisted raw Home Assistant records already stored for the configured entities
 - makes those events available in the week, month, and year views
 
 The current import window is the last 365 days.
-Repeated imports are intended to be idempotent at the normalized timeline layer: raw source records are upserted, and Home Assistant-derived watch events are rebuilt from the imported history instead of blindly appended.
+Repeated imports are intended to be idempotent at the normalized timeline layer: raw source records are upserted, and Home Assistant-derived watch events are rebuilt from persisted raw history instead of blindly appended or limited to only the latest fetched response.
 Manual and scheduled imports are protected against overlap so the same source cannot be imported twice at the same time.
 
 Normalization notes:
 - generic device-only rows such as `Sky Q Bedroom` or `Sky Q Livingroom` are filtered out unless Home Assistant exposes meaningful programme metadata
 - real timeline entries preserve channel/source context and device context separately
 - current entity state is merged into import processing so currently playing content can appear even when history has not yet emitted a fresh transition
+- persisted raw Home Assistant history is now the normalization source of truth, so earlier programme segments survive later imports even when a newer fetch is less complete than the previously captured raw data
 - recognized channels now persist a high-confidence `metadata.channel_key` when matched by the local registry, while unknown channels remain text-only
 
 ## Scheduled Sync

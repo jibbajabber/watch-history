@@ -24,6 +24,10 @@ type RawRecordRow = {
   id: string;
 };
 
+type PersistedHistoryRow = {
+  payload: HomeAssistantHistoryState;
+};
+
 type ImportStatus = "pending" | "running" | "completed" | "failed";
 type NormalizedSession = {
   entityId: string;
@@ -263,6 +267,48 @@ async function upsertRawImportRecord(
   );
 
   return result.rows[0].id;
+}
+
+async function loadPersistedHistoryGroups(sourceId: string, entityIds: string[]) {
+  const result = await query<PersistedHistoryRow>(
+    `
+      SELECT payload
+      FROM raw_import_records
+      WHERE source_id = $1
+        AND payload->>'entity_id' = ANY($2::text[])
+      ORDER BY COALESCE(
+        payload->>'last_reported',
+        payload->>'last_updated',
+        payload->>'last_changed',
+        ''
+      ) ASC
+    `,
+    [sourceId, entityIds]
+  );
+
+  const groupedHistory = new Map<string, HomeAssistantHistoryState[]>();
+
+  for (const entityId of entityIds) {
+    groupedHistory.set(entityId, []);
+  }
+
+  for (const row of result.rows) {
+    const state = row.payload;
+
+    if (!state?.entity_id) {
+      continue;
+    }
+
+    const history = groupedHistory.get(state.entity_id);
+
+    if (!history) {
+      continue;
+    }
+
+    history.push(state);
+  }
+
+  return entityIds.map((entityId) => groupedHistory.get(entityId) ?? []);
 }
 
 function getStateTimestamp(state: HomeAssistantHistoryState) {
@@ -531,7 +577,11 @@ export async function runHomeAssistantImport() {
         await upsertRawImportRecord(importJobId, sourceId, state);
       }
 
-      const normalizedSessions = normalizeHistoryToSessions(enrichedHistoryGroups);
+      const persistedHistoryGroups = await loadPersistedHistoryGroups(
+        sourceId,
+        configResult.config.entities
+      );
+      const normalizedSessions = normalizeHistoryToSessions(persistedHistoryGroups);
       const importedCount = await replaceNormalizedWatchEvents(sourceId, normalizedSessions);
 
       await completeImportJob(importJobId, "completed", historyStates.length, importedCount);

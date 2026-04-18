@@ -1,6 +1,11 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import YAML from "yaml";
+import {
+  parseSourceRetentionConfig,
+  serializeSourceRetentionConfig,
+  type SourceRetentionConfig
+} from "@/lib/source-retention";
 
 const configDirectory = path.join(process.cwd(), "configs");
 const configPath = path.join(configDirectory, "home-assistant.yaml");
@@ -13,6 +18,7 @@ type ParsedHomeAssistantConfig = {
     enabled?: unknown;
     interval_minutes?: unknown;
   };
+  retention?: unknown;
 };
 
 export type HomeAssistantConfig = {
@@ -22,6 +28,7 @@ export type HomeAssistantConfig = {
     enabled: boolean;
     intervalMinutes: number;
   };
+  retention: SourceRetentionConfig;
 };
 
 function normalizeBaseUrl(value: string) {
@@ -63,7 +70,10 @@ function parseConfigDocument(raw: string): HomeAssistantConfig {
     sync: {
       enabled: parsed.sync?.enabled === true,
       intervalMinutes
-    }
+    },
+    retention: parseSourceRetentionConfig(parsed.retention, {
+      supportsProvisional: false
+    })
   };
 }
 
@@ -107,7 +117,10 @@ export async function writeHomeAssistantConfig(config: HomeAssistantConfig) {
     sync: {
       enabled: config.sync.enabled,
       interval_minutes: config.sync.intervalMinutes
-    }
+    },
+    retention: serializeSourceRetentionConfig(config.retention, {
+      supportsProvisional: false
+    })
   });
 
   await writeFile(configPath, serialized, "utf8");

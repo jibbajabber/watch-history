@@ -1,5 +1,6 @@
 import { getPool, query } from "@/lib/db";
 import { fetchPlexHistory, fetchPlexSessions } from "@/lib/plex";
+import { getSourceImportLockKey } from "@/lib/source-locks";
 
 type SourceRow = {
   id: string;
@@ -78,7 +79,6 @@ type NormalizedPlexWatch = {
   metadata: Record<string, unknown>;
 };
 
-const plexImportLockKey = 7_405_002;
 const recentHistoryMatchWindowMs = 12 * 60 * 60 * 1000;
 
 function buildNormalizedTitle(item: PlexHistoryItem) {
@@ -523,7 +523,7 @@ export async function runPlexImport() {
   try {
     const lockResult = await lockClient.query<{ acquired: boolean }>(
       "SELECT pg_try_advisory_lock($1) AS acquired",
-      [plexImportLockKey]
+      [getSourceImportLockKey("plex")]
     );
 
     if (!lockResult.rows[0]?.acquired) {
@@ -609,7 +609,7 @@ export async function runPlexImport() {
     }
   } finally {
     if (lockAcquired) {
-      await lockClient.query("SELECT pg_advisory_unlock($1)", [plexImportLockKey]);
+      await lockClient.query("SELECT pg_advisory_unlock($1)", [getSourceImportLockKey("plex")]);
     }
 
     lockClient.release();

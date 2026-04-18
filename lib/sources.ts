@@ -4,6 +4,7 @@ import { readHomeAssistantConfig } from "@/lib/home-assistant-config";
 import { readPlexConfig } from "@/lib/plex-config";
 import { checkPlexConnectivity, getPlexBaseUrl } from "@/lib/plex";
 import { query } from "@/lib/db";
+import { summarizeSourceRetention } from "@/lib/source-retention";
 import type { SourceStatus } from "@/lib/types";
 
 type SourceRow = {
@@ -420,6 +421,26 @@ export async function getSourceStatuses(): Promise<SourceStatus[]> {
         ? plexConfigResult.config.sync.intervalMinutes
         : 30;
     const freshnessTime = latestImport?.latest_completed_at ?? latestImportAt;
+    const retentionConfig = isHomeAssistant
+      ? configResult.ok
+        ? configResult.config.retention
+        : {
+            mode: "indefinite" as const,
+            historyDays: null,
+            importJobDays: null,
+            provisionalHours: null
+          }
+      : plexConfigResult.ok
+        ? plexConfigResult.config.retention
+        : {
+            mode: "indefinite" as const,
+            historyDays: null,
+            importJobDays: null,
+            provisionalHours: null
+          };
+    const retentionSummary = summarizeSourceRetention(retentionConfig, {
+      supportsProvisional: !isHomeAssistant
+    });
     const nextSyncAt = syncEnabled && freshnessTime
       ? new Date(new Date(freshnessTime).getTime() + syncIntervalMinutes * 60 * 1000).toISOString()
       : null;
@@ -560,6 +581,13 @@ export async function getSourceStatuses(): Promise<SourceStatus[]> {
       syncIntervalMinutes,
       syncStatusLabel: syncEnabled ? "Enabled" : "Disabled",
       nextSyncLabel,
+      retentionModeLabel: retentionSummary.modeLabel,
+      retentionSummaryLabel: retentionSummary.summaryLabel,
+      retentionDetail: retentionSummary.detail,
+      retentionHistoryDays: retentionConfig.historyDays,
+      retentionImportJobDays: retentionConfig.importJobDays,
+      retentionProvisionalHours: retentionConfig.provisionalHours,
+      retentionSupportsProvisional: !isHomeAssistant,
       ...derivedStatus
     };
   });

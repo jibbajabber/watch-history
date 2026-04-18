@@ -2,7 +2,8 @@ import { AppShell } from "@/components/app-shell";
 import { SourceListScreen } from "@/components/source-list-screen";
 import {
   importSourceHistory,
-  updateHomeAssistantSyncSettings
+  updateHomeAssistantSyncSettings,
+  updateSourceRetentionSettings
 } from "@/app/sources/actions";
 import { getSourceStatuses } from "@/lib/sources";
 
@@ -31,6 +32,7 @@ export default async function SourcesPage({ searchParams }: SourcesPageProps) {
         flashDetail={resolvedSearchParams?.detail}
         importSourceAction={importSourceHistory}
         updateSyncAction={updateHomeAssistantSyncSettings}
+        updateRetentionAction={updateSourceRetentionSettings}
       />
     </AppShell>
   );

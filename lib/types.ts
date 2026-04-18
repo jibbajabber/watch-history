@@ -88,4 +88,11 @@ export type SourceStatus = {
   syncIntervalMinutes: number;
   syncStatusLabel: string;
   nextSyncLabel: string;
+  retentionModeLabel: string;
+  retentionSummaryLabel: string;
+  retentionDetail: string;
+  retentionHistoryDays: number | null;
+  retentionImportJobDays: number | null;
+  retentionProvisionalHours: number | null;
+  retentionSupportsProvisional: boolean;
 };

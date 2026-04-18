@@ -2,12 +2,13 @@ import Link from "next/link";
 import { getSourceHealthNotice } from "@/lib/sources";
 import type { AppSection, TimelineView } from "@/lib/types";
 
-type AppShellHref = `/${TimelineView}` | "/sources";
+type AppShellHref = `/${TimelineView}` | "/analytics" | "/sources";
 
 const views: Array<{ href: AppShellHref; label: string; view: AppSection }> = [
   { href: "/week", label: "Week", view: "week" },
   { href: "/month", label: "Month", view: "month" },
   { href: "/year", label: "Year", view: "year" },
+  { href: "/analytics", label: "Analytics", view: "analytics" },
   { href: "/sources", label: "Sources", view: "sources" }
 ];
 
@@ -33,6 +34,11 @@ const sectionCards: Record<
     eyebrow: "This view",
     title: "The larger shape of watching.",
     body: "Year view compresses the timeline into a broader pattern so active months, long gaps, and recurring habits are easier to compare."
+  },
+  analytics: {
+    eyebrow: "This section",
+    title: "Patterns, growth, and import momentum.",
+    body: "Use Analytics to read the full dataset: long-range watch habits, source contribution, import activity, and how the stored history is growing."
   },
   sources: {
     eyebrow: "This section",
@@ -103,9 +109,9 @@ export async function AppShell({
                         fontSize: "1.05rem",
                         lineHeight: 1.7
                       }}
-                    >
+                      >
                       A timeline-first watch journal for the last week, the shape of a month,
-                      and the rhythm of a year.
+                      the rhythm of a year, and the patterns building underneath it.
                     </p>
                   </div>
                 </div>

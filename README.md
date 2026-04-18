@@ -25,6 +25,7 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `app/layout.tsx`: Root app shell wiring and shared page chrome entrypoint.
 - `app/page.tsx`: Default route that forwards into the main timeline experience.
 - `app/[view]/page.tsx`: Week, month, and year timeline route renderer.
+- `app/analytics/page.tsx`: `/analytics` screen entrypoint for long-range watch, dataset, and import analytics.
 - `app/globals.css`: Global styling, theme tokens, and shared layout styles.
 - `app/sources/page.tsx`: `/sources` screen entrypoint for source operations, sync, and retention controls.
 - `app/sources/actions.ts`: Server actions for manual imports plus sync and retention settings updates.
@@ -33,7 +34,8 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `app/api/sources/home-assistant/import/route.ts`: Manual and worker-triggered Home Assistant import endpoint.
 - `app/api/sources/plex/import/route.ts`: Manual and worker-triggered Plex import endpoint.
 - `app/api/timeline/[view]/route.ts`: Timeline data API for week, month, and year views.
-- `components/`: UI components for the application shell and timeline views.
+- `components/`: UI components for the application shell, analytics, timeline views, and sources screens.
+- `components/analytics-screen.tsx`: Analytics screen composition for overview cards, trend bars, ranked lists, source contribution, and import activity.
 - `components/app-shell.tsx`: Shared navigation shell used across timeline and sources screens.
 - `components/source-list-screen.tsx`: Sources operations UI including health, sync, import, and retention forms.
 - `components/timeline-view-screen.tsx`: Main timeline view composition for summaries, groups, and entries.
@@ -58,8 +60,11 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `docs/architecture/feature-10-plex-enrichment-and-sources-polish.md`: Review-first implementation plan for Plex playback enrichment and `/sources` UI cleanup.
 - `docs/architecture/feature-11-source-data-retention-controls.md`: Review-first implementation plan for per-source retention across raw records, normalized history, import-job audit rows, and Plex provisional sessions.
 - `docs/architecture/feature-12-analytics-tab.md`: Review-first implementation plan for a dedicated analytics tab covering watch patterns and dataset growth.
+- `docs/architecture/feature-13-favourites-and-curation.md`: Review-first implementation plan for favourites, recommendations, and hidden timeline-item curation.
+- `docs/architecture/feature-14-testing-and-tdd-workflow.md`: Review-first implementation plan for container-first automated testing and TDD workflow guidance.
 - `lib/`: Server-side data access, formatting, and shared type definitions.
 - `lib/app-config.ts`: App-level environment and timezone helpers.
+- `lib/analytics.ts`: Server-side analytics queries for overview totals, watch-pattern rollups, dataset growth, and import activity.
 - `lib/channels.ts`: Channel normalization and local logo-registry mapping for Sky Q channel branding.
 - `lib/db.ts`: Shared PostgreSQL connection and query helpers.
 - `lib/format.ts`: Formatting helpers used by timeline and source presentation code.
@@ -73,7 +78,7 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `lib/source-retention.ts`: Retention config parsing, summaries, and per-source cleanup execution.
 - `lib/sources.ts`: Source registry, status derivation, and `/sources` screen data assembly.
 - `lib/timeline.ts`: Timeline query and grouping logic for week, month, and year views.
-- `lib/types.ts`: Shared application types for timeline and source status data.
+- `lib/types.ts`: Shared application types for timeline, analytics, and source status data.
 - `public/channel-logos/`: Curated local SVG channel logo assets for recognized channels.
 - `public/static/watch-history-main.png`: Main README screenshot of the current app.
 - `scripts/source-sync-worker.ts`: Scheduled source sync worker for Docker Compose, currently handling Home Assistant and Plex.
@@ -109,6 +114,7 @@ The current application is a working first version:
 - Plex source registration, connectivity checks, manual history import, and scheduled sync are available
 - Plex imports rebuild durable timeline history from persisted raw Plex rows, while active sessions remain provisional in-progress entries
 - per-source retention settings are available on `/sources` for durable history, import-job audit rows, and Plex provisional session data
+- a dedicated analytics tab now summarizes long-range watch patterns, dataset growth, source contribution, and recent import activity
 - scheduled sync is available through Docker Compose
 - the UI uses live imported data rather than mocked watch-history content
 - `/sources` is a user-facing operations screen with source health, sync cadence, and import-state summaries
@@ -131,13 +137,17 @@ Completed:
 - Feature 9: Home Assistant current-playing continuity with watch-event rebuilding from persisted raw history so same-channel Sky Q programme transitions survive repeated imports
 - Feature 10: Plex continuity and `/sources` polish with persisted-raw Plex normalization, provisional active-session timeline cues, and operational source summaries
 - Feature 11: source data-retention controls with YAML-backed source settings, `/sources` editing, worker cleanup, and safe retention of import-job audit rows
+- Feature 12: analytics tab for overview, watch patterns, dataset growth, source contribution, and import activity from real stored data
 
 Planned:
-- Feature 12: analytics tab for watch patterns, source contribution, and dataset growth
+- Feature 13: favourites tab with timeline-item curation for favourite, recommend, and hide actions
+- Feature 14: container-first automated testing workflow with TDD guidance and a CI/GitHub Actions decision
 
 Recommended next pickup:
-1. Flesh out feature 12 for an analytics tab covering watch behavior and dataset growth over time
-2. Preserve the completed Home Assistant, Plex, and retention behavior as analytics and later features land
+1. Pick up Feature 13 using the resume defaults in `docs/architecture/feature-13-favourites-and-curation.md`
+2. Then pick up Feature 14 using the resume defaults in `docs/architecture/feature-14-testing-and-tdd-workflow.md`, with GitHub Actions deferred to Feature 15 unless redirected
+3. Decide whether streak and time-of-day metrics belong in a Feature 12 follow-up pass or a later feature
+4. Preserve the completed Home Assistant, Plex, and retention behavior as analytics and later features land
 
 ## Development Workflow
 

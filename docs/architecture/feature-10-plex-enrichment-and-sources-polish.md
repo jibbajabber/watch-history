@@ -186,3 +186,7 @@ Repository review on 2026-04-18 confirms:
 - Plex continuity is a real implementation concern, not just a hypothetical one, because `runPlexImport()` currently rebuilds from only the latest fetched payload
 - Plex enrichment should likely be asymmetric unless further evidence appears, because active sessions currently expose richer device/progress fields than durable history rows
 - `/sources` polish should reuse the existing health and sync data model instead of inventing a new status framework
+
+Follow-up decision during implementation:
+- feature 10 should preserve provisional Plex sessions until durable history replaces them, without a hardcoded expiry window
+- broader source-retention policy and configurable cleanup should move to feature 11 rather than remaining embedded in Plex import logic

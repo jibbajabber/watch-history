@@ -36,7 +36,8 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `docs/architecture/feature-6-channel-logos.md`: Review-first implementation plan for channel-logo discovery and rendering.
 - `docs/architecture/feature-7-plex-source-support.md`: Review-first implementation plan for the first Plex source integration.
 - `docs/architecture/feature-8-import-reliability-and-source-health.md`: Review-first implementation plan for resilient import failures, source-health status, and shared warning banners.
-- `docs/architecture/feature-9-plex-enrichment-and-sources-polish.md`: Review-first implementation plan for Plex playback enrichment and `/sources` UI cleanup.
+- `docs/architecture/feature-9-home-assistant-current-playing-continuity.md`: Review-first implementation plan for preserving Sky Q programme continuity when Home Assistant current-state detail advances without a matching playback-state transition.
+- `docs/architecture/feature-10-plex-enrichment-and-sources-polish.md`: Review-first implementation plan for Plex playback enrichment and `/sources` UI cleanup.
 - `lib/`: Server-side data access, formatting, and shared type definitions.
 - `lib/channels.ts`: Channel normalization and local logo-registry mapping for Sky Q channel branding.
 - `lib/plex.ts`: Plex connectivity and API helpers for token-based server access.
@@ -77,9 +78,9 @@ Completed:
 - Feature 8: Import reliability and source-health visibility with degraded source status, a shared warning banner, and clearer `/sources` recovery state
 
 Recommended next pickup:
-1. Start feature 9 for Plex device/progress enrichment and `/sources` page polish
-2. Remove or replace low-value internal planning copy on `/sources` while keeping the new reliability signals intact
-3. Confirm whether any additional source priorities should follow Plex
+1. Start feature 9 for Sky Q current-playing continuity so same-channel programme changes are preserved in watch history
+2. Validate how Home Assistant history and current-state snapshots behave when Sky Q stays in `playing` across programme boundaries
+3. Move Plex enrichment and `/sources` page polish to feature 10 after the Sky Q continuity gap is addressed
 
 ## Development Workflow
 

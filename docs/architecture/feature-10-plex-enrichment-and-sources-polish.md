@@ -1,10 +1,10 @@
-# Feature 9: Plex Enrichment And Sources Polish
+# Feature 10: Plex Enrichment And Sources Polish
 
 ## Purpose
 
 Improve the usefulness and presentation of Plex-derived timeline entries, and make the `/sources` screen more user-focused and visually consistent.
 
-This feature should build on the completed Plex source support from feature 7 and the reliability work planned for feature 8.
+This feature should build on the completed Plex source support from feature 7, the reliability work completed in feature 8, and the Sky Q continuity work planned for feature 9.
 
 ## Product Goal
 

@@ -58,6 +58,7 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `lib/`: Server-side data access, formatting, and shared type definitions.
 - `lib/app-config.ts`: App-level environment and timezone helpers.
 - `lib/analytics.ts`: Server-side analytics queries for overview totals, watch-pattern rollups, dataset growth, and import activity.
+- `lib/analytics-data.ts`: Pure analytics response-shaping helpers used for automated coverage without a live database.
 - `lib/channels.ts`: Channel normalization and local logo-registry mapping for Sky Q channel branding.
 - `lib/curation.ts`: Curation schema bootstrap, stable event-key logic, favourites queries, and favourite/hide updates.
 - `lib/db.ts`: Shared PostgreSQL connection and query helpers.
@@ -65,22 +66,28 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `lib/home-assistant.ts`: Home Assistant connectivity and API request helpers.
 - `lib/home-assistant-config.ts`: Home Assistant YAML config loader/writer for sync and retention settings.
 - `lib/home-assistant-import.ts`: Home Assistant raw import and watch-event rebuilding from persisted state history.
+- `lib/home-assistant-normalization.ts`: Pure Home Assistant history normalization helpers used by automated coverage and importer shaping.
 - `lib/plex.ts`: Plex connectivity and API helpers for token-based server access.
 - `lib/plex-config.ts`: Plex non-secret scheduled sync configuration loader/writer.
 - `lib/plex-import.ts`: Plex raw history import and watch-event normalization from persisted raw Plex records, with current `/status/sessions` playback shown as provisional in-progress entries when relevant.
+- `lib/plex-normalization.ts`: Pure Plex history and session normalization helpers used by automated coverage and importer shaping.
 - `lib/source-locks.ts`: Shared advisory-lock keys for per-source import and cleanup coordination.
 - `lib/source-retention.ts`: Retention config parsing, summaries, and per-source cleanup execution.
+- `lib/source-status.ts`: Pure source-health and operational-status helpers extracted for container-first automated test coverage.
 - `lib/sources.ts`: Source registry, status derivation, and `/sources` screen data assembly.
+- `lib/timeline-data.ts`: Pure timeline view mapping and summary helpers extracted for automated coverage and future reuse.
 - `lib/timeline.ts`: Timeline query and grouping logic for week, month, and year views.
 - `lib/types.ts`: Shared application types for timeline, analytics, and source status data.
 - `public/channel-logos/`: Curated local SVG channel logo assets for recognized channels.
 - `public/static/watch-history-main.png`: Main README screenshot of the current app.
 - `scripts/source-sync-worker.ts`: Scheduled source sync worker for Docker Compose, currently handling Home Assistant and Plex.
+- `tests/`: `vitest` suites for pure server-side helpers and future container-first automated coverage.
 - `Dockerfile`: Canonical application container definition for local development.
 - `docker-compose.yml`: Container orchestration for the web application and PostgreSQL database.
 - `next.config.ts`: Next.js runtime configuration.
 - `package.json`: App package manifest, scripts, and dependency declarations.
 - `tsconfig.json`: TypeScript compiler configuration.
+- `vitest.config.ts`: Base `vitest` configuration, path aliases, and coverage reporters.
 - `.env.example`: Required environment variables for the Docker Compose environment.
 - `README.md`: Repository overview and high-level documentation index.
 
@@ -134,14 +141,12 @@ Completed:
 - Feature 11: source data-retention controls with YAML-backed source settings, `/sources` editing, worker cleanup, and safe retention of import-job audit rows
 - Feature 12: analytics tab for overview, watch patterns, dataset growth, source contribution, and import activity from real stored data
 - Feature 13: favourites tab with persistent favourite and hide curation, hidden-item exclusion from default timeline and analytics views, and recovery of hidden items from `/favourites`
-
-Planned:
-- Feature 14: container-first automated testing workflow with TDD guidance and a CI/GitHub Actions decision
+- Feature 14: container-first local automated testing with `vitest`, coverage output, helper-focused tests, and documented TDD guidance
 
 Recommended next pickup:
-1. Pick up Feature 14 using the resume defaults in `docs/architecture/feature-14-testing-and-tdd-workflow.md`, with GitHub Actions deferred to Feature 15 unless redirected
-2. Decide whether streak and time-of-day metrics belong in a Feature 12 follow-up pass or a later feature
-3. Preserve the completed Home Assistant, Plex, retention, and favourites behavior as later features land
+1. Pick up Feature 15 for CI or GitHub Actions once the local container-first test workflow is stable enough to enforce remotely
+2. Decide whether the next testing slice should add DB-backed importer coverage or stay focused on more extracted server-side helpers
+3. Decide whether streak and time-of-day metrics belong in a Feature 12 follow-up pass or a later feature
 
 ## Development Workflow
 
@@ -156,6 +161,29 @@ The repository `docker-compose.yml` is the canonical local deployment definition
 5. Open `http://localhost:3000`.
 
 Do not run the application stack directly on the host machine. Docker and `docker compose` are the intended execution environment.
+
+## Automated Testing
+
+Feature 14 introduces the first container-first automated test workflow.
+
+Canonical commands:
+- `docker compose exec web npm run test`
+- `docker compose exec web npm run test:watch`
+- `docker compose exec web npm run typecheck`
+
+`npm run test` runs `vitest` in coverage mode and should finish with a text coverage summary while also writing the HTML report under `coverage/`.
+
+Current test scope:
+- pure server-side helpers such as formatting, source retention, source-status derivation, timeline shaping, and analytics response mapping
+- no browser automation yet
+- no mandatory coverage threshold yet
+
+TDD guidance for contributors:
+- prefer writing a failing or focused test first when adding logic-heavy behavior
+- if true test-first is not practical, add or update tests in the same change as the protected code
+- start with pure helpers and extracted server logic before widening into DB-backed or UI-heavy coverage
+
+If dependencies change, rebuild the Docker image before running tests so the containerized toolchain stays in sync with `package.json`.
 
 ## Environment Variables
 

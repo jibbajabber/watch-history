@@ -51,6 +51,8 @@ When starting or advancing a feature in this repository:
 - If the user wants a branch created, create it from the feature name and do not include the file suffix such as `.md` in the branch name.
 - Once a feature is implemented, ask the user whether they want the branch pushed.
 - After that, ask the user whether they want a PR raised.
+- When raising a PR from a feature branch, derive the title from the feature name or branch name by replacing hyphens with spaces and capitalizing each word.
+- Keep the PR description simple and outcome-focused, summarizing what the feature achieves rather than reproducing the full implementation detail.
 - If implementation or verification would require starting a stopped local Docker Compose stack, ask the user before doing that because the source of truth may currently be a remote Docker deployment.
 
 ## Engineering Standards
@@ -180,6 +182,7 @@ For new feature work, use this default sequence unless the user explicitly redir
 7. Implement, verify, and document the feature.
 8. When the feature is complete, ask whether the user wants the branch pushed.
 9. Ask whether the user wants a PR raised.
+10. If a PR is raised, use a Title Case title derived from the feature name or branch name with hyphens replaced by spaces, and write a short description summarizing what the feature achieves.
 
 ## Decision Log
 
@@ -219,6 +222,7 @@ Use this section to record decisions as they are made.
 | 2026-04-18 | Agents should not read local env files or similar secret-bearing files unless the user explicitly asks. | Secret-backed tasks should prefer user-run commands, sanitized inputs, or explicit permission to inspect sensitive configuration. |
 | 2026-04-18 | Feature work should follow a spec-first, review-first, branch-on-request workflow. | Define the feature under `docs/architecture`, review it with the user, update project docs, then ask whether to create a branch before implementation; after completion ask about push and PR steps. |
 | 2026-04-18 | Agents must ask before starting a stopped local Docker Compose stack. | The canonical deployment definition is the repo `docker-compose.yml`, but the active application may be running on a remote Docker host that the user must interact with directly. |
+| 2026-04-18 | PRs should use a feature-name-derived Title Case title and a short achievement-focused description. | Replace hyphens with spaces in the feature or branch name, capitalize each word, and keep the body concise. |
 
 ## Next Discovery Steps
 

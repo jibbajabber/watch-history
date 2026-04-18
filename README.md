@@ -61,6 +61,7 @@ Feature work in this repository follows a spec-first workflow:
 - if a branch is created, name it from the feature name without the `.md` suffix
 - if the local Docker Compose stack is not already running, ask the user before starting it because their active environment may be a remote Docker host
 - once the feature is complete, ask whether the user wants the branch pushed and whether they want a PR raised
+- if a PR is raised, title it from the feature or branch name by replacing hyphens with spaces and capitalizing each word, then use a short description that explains what the feature achieves
 
 ## Current Status
 

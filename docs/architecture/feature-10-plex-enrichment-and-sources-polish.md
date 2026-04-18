@@ -4,15 +4,17 @@
 
 Improve the usefulness and presentation of Plex-derived timeline entries, and make the `/sources` screen more user-focused and visually consistent.
 
-This feature should build on the completed Plex source support from feature 7, the reliability work completed in feature 8, and the Sky Q continuity work planned for feature 9.
+This feature should build on the completed Plex source support from feature 7, the reliability work completed in feature 8, and the completed Sky Q continuity work from feature 9.
 
 ## Product Goal
 
-Make Plex entries more informative by surfacing richer playback context where it is reliable, and make the sources page feel cleaner, more consistent, and more relevant to the end user.
+Make Plex entries more informative by surfacing richer playback context where it is reliable, ensure Plex timeline continuity is not vulnerable to the same latest-fetch rebuild gap that previously affected Home Assistant, and make the sources page feel cleaner, more consistent, and more relevant to the end user.
 
 ## Scope
 
 Included:
+- discovery of whether Plex watch-event rebuilding is vulnerable to incomplete latest-fetch responses or active-session gaps
+- importer changes if needed so Plex normalization preserves already-captured raw history safely across repeated imports
 - richer Plex timeline metadata when reliable device/progress data is available
 - partial-watch presentation for Plex when the source data supports it safely
 - clearer source cards that remove low-value explanatory copy
@@ -30,12 +32,35 @@ Current Plex entries are usable but still relatively thin:
 - they do not clearly communicate partial playback when that information is available
 - they do not reliably show which playback device was used
 
+Current Plex import behavior also still follows the older rebuild pattern:
+- raw history rows and active-session rows are upserted into `raw_import_records`
+- normalized `watch_events` are rebuilt from only the latest fetched Plex payload
+- existing Plex `watch_events` are deleted and reinserted on each import
+
+That means Plex may still have the same class of continuity risk that Home Assistant had before feature 9:
+- a temporary incomplete history response could remove previously normalized rows
+- provisional active-session rows may appear on one import and disappear on the next before durable history catches up
+- the timeline can become dependent on the latest fetch rather than the fuller raw evidence already stored in the database
+
 Current `/sources` page content also has avoidable noise:
 - descriptive text directly under the source title is not especially useful once the source exists and is configured
 - the "Next step" block reflects internal project sequencing more than user-facing product value
 - cards do not align especially well when one source has more content than another
 
 ## Design Direction
+
+### Plex Continuity
+
+Before leaning harder on enriched Plex metadata, confirm that the underlying rebuild model is trustworthy.
+
+The first rule should be:
+- do not let richer enrichment work obscure source-truth continuity
+- if Plex is vulnerable to the same latest-fetch rebuild gap, fix that before relying more heavily on enriched Plex metadata in the UI
+
+Continuity directions to validate:
+- treat persisted Plex `raw_import_records` as the durable evidence set if the latest-fetch rebuild pattern proves lossy
+- distinguish provisional active-session rows from durable history rows in normalization rules before exposing them more prominently in the UI
+- keep repeated imports idempotent without making the latest fetch the sole source of truth
 
 ### Plex Enrichment
 
@@ -47,7 +72,7 @@ Candidate enrichments:
 - watched duration or progress snippet
 - better distinction between active playback, completed history, and partial playback
 
-The first rule should be:
+The rule for enrichment should be:
 - do not show guessed progress or device context
 - only render enriched metadata when the supporting Plex fields are present and trustworthy
 
@@ -89,14 +114,25 @@ Potential changes:
 
 ### Phase 1: Data Validation
 
+- confirm whether Plex normalization is vulnerable to the same latest-fetch clobbering pattern previously seen in Home Assistant
+- inspect how `/status/sessions/history/all` and current sessions overlap across repeated imports
 - confirm which Plex fields are reliable enough for device labels
 - confirm which Plex fields are reliable enough for partial-watch/duration display
 - decide when enrichment should be omitted entirely
 
 Exit criteria:
-- the enrichment rules are explicit and defensible
+- the continuity risk is understood and the enrichment rules are explicit and defensible
 
-### Phase 2: Plex Timeline Enrichment
+### Phase 2: Plex Continuity Strategy
+
+- decide whether Plex watch-event rebuilding should use persisted raw rows instead of only the latest fetched payload
+- preserve or clearly model provisional active-session rows so repeated imports do not remove meaningful recent playback unexpectedly
+- keep repeated Plex imports idempotent while avoiding destructive loss of already-captured timeline history
+
+Exit criteria:
+- Plex repeated imports preserve expected timeline continuity even when active-session and durable-history timing differs
+
+### Phase 3: Plex Timeline Enrichment
 
 - add device/progress metadata to normalized Plex events where safe
 - update timeline rendering to show enriched Plex metadata cleanly
@@ -105,7 +141,7 @@ Exit criteria:
 Exit criteria:
 - Plex entries are more informative without introducing guesswork
 
-### Phase 3: Sources Screen Polish
+### Phase 4: Sources Screen Polish
 
 - simplify source-card descriptive copy
 - remove or replace internal-facing "Next step" sections
@@ -117,6 +153,8 @@ Exit criteria:
 
 ## Acceptance Criteria
 
+- repeated Plex imports do not remove already-captured timeline rows solely because the latest fetch is temporarily less complete
+- any provisional active-session behavior is either preserved safely or clearly constrained so it does not mislead the user
 - Plex timeline entries can show device and/or partial-watch context when the source data is reliable enough
 - the UI falls back cleanly when that enrichment data is unavailable
 - source cards no longer emphasize internal project-planning language
@@ -125,6 +163,8 @@ Exit criteria:
 
 ## Open Questions
 
+- should Plex normalization rebuild from persisted raw rows every time, as Home Assistant now does, or is the latest-fetch model sufficient for Plex durability?
+- how should provisional active-session rows behave when a later import still does not have the matching durable history row yet?
 - what exact Plex fields are reliable enough for partial-watch duration or progress display?
 - should active-session Plex rows be visually distinct from durable history rows?
 - should source cards show user-facing summaries like "last success" / "last failure" instead of the current "Next step" area?

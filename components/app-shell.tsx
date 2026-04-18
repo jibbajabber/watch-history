@@ -2,7 +2,9 @@ import Link from "next/link";
 import { getSourceHealthNotice } from "@/lib/sources";
 import type { AppSection, TimelineView } from "@/lib/types";
 
-const views: Array<{ href: string; label: string; view: AppSection }> = [
+type AppShellHref = `/${TimelineView}` | "/sources";
+
+const views: Array<{ href: AppShellHref; label: string; view: AppSection }> = [
   { href: "/week", label: "Week", view: "week" },
   { href: "/month", label: "Month", view: "month" },
   { href: "/year", label: "Year", view: "year" },

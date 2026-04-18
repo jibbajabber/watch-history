@@ -75,8 +75,7 @@ export function SourceListScreen({
             fontSize: "1rem"
           }}
         >
-          This screen tracks source readiness, authentication, and import status as the app grows
-          from Home Assistant into additional media history integrations such as Plex.
+          Manage source health, import runs, and sync cadence from one place.
         </p>
       </div>
 
@@ -122,7 +121,8 @@ export function SourceListScreen({
                 borderRadius: "28px",
                 padding: "22px",
                 display: "grid",
-                gap: "18px"
+                gap: "18px",
+                alignContent: "start"
               }}
             >
               <div
@@ -164,10 +164,6 @@ export function SourceListScreen({
                   {source.statusLabel}
                 </span>
               </div>
-
-              <p className="muted" style={{ margin: 0, lineHeight: 1.7 }}>
-                {source.description}
-              </p>
 
               <div
                 style={{
@@ -242,10 +238,10 @@ export function SourceListScreen({
                   gap: "10px"
                 }}
               >
-                <span className="eyebrow">Next step</span>
-                <strong style={{ fontSize: "1rem" }}>{source.nextStepTitle}</strong>
+                <span className="eyebrow">Operational summary</span>
+                <strong style={{ fontSize: "1rem" }}>{source.operationalTitle}</strong>
                 <p className="muted" style={{ margin: 0, lineHeight: 1.7 }}>
-                  {source.nextStepBody}
+                  {source.operationalBody}
                 </p>
               </section>
 

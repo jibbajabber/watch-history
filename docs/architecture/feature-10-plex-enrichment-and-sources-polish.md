@@ -36,6 +36,7 @@ Current Plex import behavior also still follows the older rebuild pattern:
 - raw history rows and active-session rows are upserted into `raw_import_records`
 - normalized `watch_events` are rebuilt from only the latest fetched Plex payload
 - existing Plex `watch_events` are deleted and reinserted on each import
+- current normalization in `lib/plex-import.ts` only carries device and progress-related fields on active session rows, not durable history rows
 
 That means Plex may still have the same class of continuity risk that Home Assistant had before feature 9:
 - a temporary incomplete history response could remove previously normalized rows
@@ -46,6 +47,7 @@ Current `/sources` page content also has avoidable noise:
 - descriptive text directly under the source title is not especially useful once the source exists and is configured
 - the "Next step" block reflects internal project sequencing more than user-facing product value
 - cards do not align especially well when one source has more content than another
+- the page already has useful health, sync, and import-state data, so feature 10 should emphasize those operational signals instead of adding more explanatory prose
 
 ## Design Direction
 
@@ -75,6 +77,7 @@ Candidate enrichments:
 The rule for enrichment should be:
 - do not show guessed progress or device context
 - only render enriched metadata when the supporting Plex fields are present and trustworthy
+- do not imply that durable Plex history rows contain progress detail when that data only exists on active-session-derived rows
 
 ### Sources Screen
 
@@ -119,6 +122,10 @@ Potential changes:
 - confirm which Plex fields are reliable enough for device labels
 - confirm which Plex fields are reliable enough for partial-watch/duration display
 - decide when enrichment should be omitted entirely
+- use the current repository state as the baseline:
+  - `lib/plex-import.ts` currently deletes all Plex `watch_events` before reinserting from the latest fetched history and active sessions
+  - `components/source-list-screen.tsx` currently retains a dedicated "Next step" section on every source card
+  - `lib/sources.ts` already computes health, recovery, sync, and connection details that can replace most internal-facing guidance
 
 Exit criteria:
 - the continuity risk is understood and the enrichment rules are explicit and defensible
@@ -137,6 +144,7 @@ Exit criteria:
 - add device/progress metadata to normalized Plex events where safe
 - update timeline rendering to show enriched Plex metadata cleanly
 - ensure the UI distinguishes absent data from zero/empty values
+- keep durable-history Plex rows visually conservative unless equivalent metadata exists in persisted raw history
 
 Exit criteria:
 - Plex entries are more informative without introducing guesswork
@@ -156,6 +164,7 @@ Exit criteria:
 - repeated Plex imports do not remove already-captured timeline rows solely because the latest fetch is temporarily less complete
 - any provisional active-session behavior is either preserved safely or clearly constrained so it does not mislead the user
 - Plex timeline entries can show device and/or partial-watch context when the source data is reliable enough
+- Plex history rows do not pretend to have device/progress detail when only provisional session rows carry it
 - the UI falls back cleanly when that enrichment data is unavailable
 - source cards no longer emphasize internal project-planning language
 - source-card layout is visibly more consistent across sources
@@ -169,3 +178,15 @@ Exit criteria:
 - should active-session Plex rows be visually distinct from durable history rows?
 - should source cards show user-facing summaries like "last success" / "last failure" instead of the current "Next step" area?
 - how far should alignment be pushed if the source cards have inherently different control sets?
+
+## Review Notes
+
+Repository review on 2026-04-18 confirms:
+- feature 10 still needs implementation; the current draft matches the broad intent but needed tighter grounding in the actual code paths
+- Plex continuity is a real implementation concern, not just a hypothetical one, because `runPlexImport()` currently rebuilds from only the latest fetched payload
+- Plex enrichment should likely be asymmetric unless further evidence appears, because active sessions currently expose richer device/progress fields than durable history rows
+- `/sources` polish should reuse the existing health and sync data model instead of inventing a new status framework
+
+Follow-up decision during implementation:
+- feature 10 should preserve provisional Plex sessions until durable history replaces them, without a hardcoded expiry window
+- broader source-retention policy and configurable cleanup should move to feature 11 rather than remaining embedded in Plex import logic

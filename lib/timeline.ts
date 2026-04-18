@@ -23,6 +23,9 @@ type EventRow = {
   device_label: string | null;
   watched_at: string;
   duration_minutes: number | null;
+  progress_label: string | null;
+  status_label: string | null;
+  is_provisional: boolean;
 };
 
 type GroupRow = {
@@ -136,7 +139,10 @@ export async function getTimelineViewData(view: TimelineView): Promise<TimelineR
           metadata->>'channel_key' AS channel_key,
           COALESCE(metadata->>'device_label', metadata->>'entity_id') AS device_label,
           watched_at::text,
-          duration_minutes
+          duration_minutes,
+          metadata->>'progress_label' AS progress_label,
+          metadata->>'status_label' AS status_label,
+          COALESCE((metadata->>'is_provisional')::boolean, false) AS is_provisional
         FROM watch_events
         WHERE watched_at >= ${window.intervalSql}
         ORDER BY watched_at DESC
@@ -211,7 +217,10 @@ export async function getTimelineViewData(view: TimelineView): Promise<TimelineR
       channelLogoPath: brand?.logoPath ?? null,
       deviceLabel: row.device_label,
       watchedAt: row.watched_at,
-      durationMinutes: row.duration_minutes
+      durationMinutes: row.duration_minutes,
+      progressLabel: row.progress_label,
+      statusLabel: row.status_label,
+      isProvisional: row.is_provisional
     };
   });
 

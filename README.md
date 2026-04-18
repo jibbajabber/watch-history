@@ -38,10 +38,12 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `docs/architecture/feature-8-import-reliability-and-source-health.md`: Review-first implementation plan for resilient import failures, source-health status, and shared warning banners.
 - `docs/architecture/feature-9-home-assistant-current-playing-continuity.md`: Review-first implementation plan for preserving Sky Q programme continuity when Home Assistant current-state detail advances without a matching playback-state transition.
 - `docs/architecture/feature-10-plex-enrichment-and-sources-polish.md`: Review-first implementation plan for Plex playback enrichment and `/sources` UI cleanup.
+- `docs/architecture/feature-11-source-data-retention-controls.md`: Review-first implementation plan for per-source data-retention controls across raw and normalized records.
+- `docs/architecture/feature-12-analytics-tab.md`: Review-first implementation plan for a dedicated analytics tab covering watch patterns and dataset growth.
 - `lib/`: Server-side data access, formatting, and shared type definitions.
 - `lib/channels.ts`: Channel normalization and local logo-registry mapping for Sky Q channel branding.
 - `lib/plex.ts`: Plex connectivity and API helpers for token-based server access.
-- `lib/plex-import.ts`: Plex raw history import and watch-event normalization from `/status/sessions/history/all`, supplemented by current `/status/sessions` playback when available.
+- `lib/plex-import.ts`: Plex raw history import and watch-event normalization from persisted raw Plex records, with current `/status/sessions` playback shown as provisional in-progress entries when relevant.
 - `lib/plex-config.ts`: Plex non-secret scheduled sync configuration loader/writer.
 - `public/channel-logos/`: Curated local SVG channel logo assets for recognized channels.
 - `scripts/source-sync-worker.ts`: Scheduled source sync worker for Docker Compose, currently handling Home Assistant and Plex.
@@ -72,9 +74,11 @@ The current application is a working first version:
 - week, month, and year timeline views are live
 - Home Assistant authentication and Sky Q history import are working
 - Plex source registration, connectivity checks, manual history import, and scheduled sync are available
-- Plex imports supplement durable history with active sessions so in-progress playback can appear before Plex writes a history row
+- Plex imports rebuild durable timeline history from persisted raw Plex rows, while active sessions remain provisional in-progress entries
+- Plex provisional sessions remain pending until durable history replaces them; retention controls are planned as follow-up source settings
 - scheduled sync is available through Docker Compose
 - the UI uses live imported data rather than mocked watch-history content
+- `/sources` is a user-facing operations screen with source health, sync cadence, and import-state summaries
 
 Current planning is organized as feature-specific architecture documents under `docs/architecture`.
 
@@ -91,11 +95,16 @@ Completed:
 - Feature 7: Plex source support with env-based connectivity, manual history import, active-session enrichment, and scheduled sync
 - Feature 8: Import reliability and source-health visibility with degraded source status, a shared warning banner, and clearer `/sources` recovery state
 - Feature 9: Home Assistant current-playing continuity with watch-event rebuilding from persisted raw history so same-channel Sky Q programme transitions survive repeated imports
+- Feature 10: Plex continuity and `/sources` polish with persisted-raw Plex normalization, provisional active-session timeline cues, and operational source summaries
+
+Planned:
+- Feature 11: source data-retention controls for raw records, normalized history, and source-specific provisional data
+- Feature 12: analytics tab for watch patterns, source contribution, and dataset growth
 
 Recommended next pickup:
-1. Start feature 10 for Plex enrichment and `/sources` page polish
-2. Preserve the completed Home Assistant continuity behavior while improving Plex detail and simplifying `/sources`
-3. Confirm whether any additional source priorities should follow Plex
+1. Flesh out feature 11 for per-source retention controls, including general source history retention and source-specific provisional cleanup
+2. Flesh out feature 12 for an analytics tab covering watch behavior and dataset growth over time
+3. Preserve the completed Home Assistant and Plex continuity behavior as those follow-up features land
 
 ## Development Workflow
 
@@ -242,7 +251,7 @@ The official Home Assistant REST API docs describe this token flow and the requi
 
 ## How To Get A Plex Token
 
-The planned Plex integration will use an `X-Plex-Token` supplied through `.env`.
+The current Plex integration uses an `X-Plex-Token` supplied through `.env`.
 
 Based on Plex's support guidance, the practical retrieval flow is:
 

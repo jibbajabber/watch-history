@@ -60,6 +60,8 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `docs/architecture/feature-10-plex-enrichment-and-sources-polish.md`: Review-first implementation plan for Plex playback enrichment and `/sources` UI cleanup.
 - `docs/architecture/feature-11-source-data-retention-controls.md`: Review-first implementation plan for per-source retention across raw records, normalized history, import-job audit rows, and Plex provisional sessions.
 - `docs/architecture/feature-12-analytics-tab.md`: Review-first implementation plan for a dedicated analytics tab covering watch patterns and dataset growth.
+- `docs/architecture/feature-13-favourites-and-curation.md`: Review-first implementation plan for favourites, recommendations, and hidden timeline-item curation.
+- `docs/architecture/feature-14-testing-and-tdd-workflow.md`: Review-first implementation plan for container-first automated testing and TDD workflow guidance.
 - `lib/`: Server-side data access, formatting, and shared type definitions.
 - `lib/app-config.ts`: App-level environment and timezone helpers.
 - `lib/analytics.ts`: Server-side analytics queries for overview totals, watch-pattern rollups, dataset growth, and import activity.
@@ -137,9 +139,15 @@ Completed:
 - Feature 11: source data-retention controls with YAML-backed source settings, `/sources` editing, worker cleanup, and safe retention of import-job audit rows
 - Feature 12: analytics tab for overview, watch patterns, dataset growth, source contribution, and import activity from real stored data
 
+Planned:
+- Feature 13: favourites tab with timeline-item curation for favourite, recommend, and hide actions
+- Feature 14: container-first automated testing workflow with TDD guidance and a CI/GitHub Actions decision
+
 Recommended next pickup:
-1. Decide whether streak and time-of-day metrics belong in a Feature 12 follow-up pass or a later feature
-2. Preserve the completed Home Assistant, Plex, and retention behavior as analytics and later features land
+1. Pick up Feature 13 using the resume defaults in `docs/architecture/feature-13-favourites-and-curation.md`
+2. Then pick up Feature 14 using the resume defaults in `docs/architecture/feature-14-testing-and-tdd-workflow.md`, with GitHub Actions deferred to Feature 15 unless redirected
+3. Decide whether streak and time-of-day metrics belong in a Feature 12 follow-up pass or a later feature
+4. Preserve the completed Home Assistant, Plex, and retention behavior as analytics and later features land
 
 ## Development Workflow
 

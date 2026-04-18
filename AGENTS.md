@@ -245,11 +245,17 @@ Use this section to record decisions as they are made.
 | 2026-04-18 | Feature 12 should add a dedicated analytics tab. | Analytics should cover both watch behavior and dataset growth using only real stored data. |
 | 2026-04-18 | Feature 12 v1 should start as a single analytics destination with overview, watch patterns, dataset growth, and import activity sections. | The first slice should use only existing `watch_events`, `raw_import_records`, `import_jobs`, and `sources` data, without adding speculative health-history or metadata-heavy dashboards. |
 | 2026-04-18 | Feature 12 is complete with a dedicated analytics tab. | `/analytics` now exposes real-data overview totals, monthly watch and dataset trends, source contribution, and recent import activity using only stored `watch_events`, `raw_import_records`, `import_jobs`, and `sources` data. |
+| 2026-04-18 | Feature 13 should add favourites and recommendation curation on top of timeline history. | The product needs a user-owned curation layer so meaningful content can be favourited, recommended, or hidden without destroying source-truth imports. |
+| 2026-04-18 | Feature 14 should establish a container-first automated testing workflow with TDD guidance. | Tests should run through the Docker-managed environment, update contributor workflow expectations, and leave a clear decision on whether GitHub Actions is included here or split into Feature 15. |
+| 2026-04-18 | Resume-default scope for Feature 13 is event-level curation with reversible hiding. | Unless the user redirects, favourites/recommendations attach to `watch_events`, hidden items are suppressed rather than deleted, and hidden items should be excluded from default timeline and analytics views. |
+| 2026-04-18 | Resume-default scope for Feature 14 is Docker-first local testing with CI deferred. | Unless the user redirects, the first testing milestone should use `vitest`, target logic-heavy server-side code first, and leave GitHub Actions for Feature 15. |
 
 ## Next Discovery Steps
 
-1. Decide whether day-of-week patterns and streak-style metrics belong in a Feature 12 follow-up pass or a later feature.
-2. Preserve the completed Home Assistant, Plex, and retention behavior as analytics and later features land.
+1. Pick up Feature 13 implementation using the documented resume defaults unless the user redirects.
+2. After Feature 13, pick up Feature 14 implementation with Docker-first local testing and GitHub Actions deferred to Feature 15 unless the user redirects.
+3. Decide whether day-of-week patterns and streak-style metrics belong in a Feature 12 follow-up pass or a later feature.
+4. Preserve the completed Home Assistant, Plex, and retention behavior as analytics and later features land.
 
 ## Feature Progress
 
@@ -277,3 +283,7 @@ Use this section to record decisions as they are made.
   Source data-retention controls are implemented with per-source YAML settings, `/sources` editing, worker-driven cleanup, durable-history cleanup, and Plex provisional retention handling.
 - Feature 12: Complete
   A dedicated analytics tab is implemented with overview totals, watch-pattern trends, dataset growth, source contribution, and recent import activity from real stored data.
+- Feature 13: Planned
+  A curation layer should let the user favourite, recommend, and hide timeline items, with a dedicated `Favourites` tab built on top of imported history.
+- Feature 14: Planned
+  The repository should adopt a container-first automated testing workflow with documented TDD expectations and a clear CI/GitHub Actions decision.

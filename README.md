@@ -22,12 +22,30 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 
 - `AGENTS.md`: Working project-definition document, collaboration guidance, engineering standards, and decision log.
 - `app/`: Next.js App Router entrypoints, API routes, and global styles for the web application.
+- `app/layout.tsx`: Root app shell wiring and shared page chrome entrypoint.
+- `app/page.tsx`: Default route that forwards into the main timeline experience.
+- `app/[view]/page.tsx`: Week, month, and year timeline route renderer.
+- `app/globals.css`: Global styling, theme tokens, and shared layout styles.
+- `app/sources/page.tsx`: `/sources` screen entrypoint for source operations, sync, and retention controls.
+- `app/sources/actions.ts`: Server actions for manual imports plus sync and retention settings updates.
+- `app/api/health/route.ts`: Health-check endpoint for container and runtime verification.
+- `app/api/sources/route.ts`: Source-status API endpoint used by the app and external checks.
+- `app/api/sources/home-assistant/import/route.ts`: Manual and worker-triggered Home Assistant import endpoint.
+- `app/api/sources/plex/import/route.ts`: Manual and worker-triggered Plex import endpoint.
+- `app/api/timeline/[view]/route.ts`: Timeline data API for week, month, and year views.
 - `components/`: UI components for the application shell and timeline views.
+- `components/app-shell.tsx`: Shared navigation shell used across timeline and sources screens.
+- `components/source-list-screen.tsx`: Sources operations UI including health, sync, import, and retention forms.
+- `components/timeline-view-screen.tsx`: Main timeline view composition for summaries, groups, and entries.
 - `components/timeline/channel-logo.tsx`: Compact channel-logo renderer for timeline entries.
+- `components/timeline/empty-timeline-state.tsx`: Empty-state presentation when no watch history is available.
+- `components/timeline/summary-cards.tsx`: Timeline summary and insight card rendering.
+- `components/timeline/timeline-grid.tsx`: Timeline event/group grid for watch history rows.
 - `configs/home-assistant-ca.crt.example`: Example placeholder for an optional Home Assistant CA certificate file when using a private CA.
-- `configs/home-assistant.yaml.example`: Example non-secret Home Assistant source configuration for the base URL and tracked entity IDs.
-- `configs/plex.yaml.example`: Example non-secret Plex sync configuration for the worker interval and enabled state.
+- `configs/home-assistant.yaml.example`: Example non-secret Home Assistant source configuration for base URL, tracked entities, sync, and retention settings.
+- `configs/plex.yaml.example`: Example non-secret Plex source configuration for sync and retention settings.
 - `db/init/`: PostgreSQL initialization scripts for the first application schema.
+- `db/init/001_initial.sql`: Initial schema for sources, import jobs, raw import records, media items, and watch events.
 - `docs/architecture/feature-1-app-scaffold.md`: Review-first implementation plan for the application scaffold and weekly, monthly, and yearly views.
 - `docs/architecture/feature-2-home-assistant-auth.md`: Review-first implementation plan for Home Assistant authentication.
 - `docs/architecture/feature-3-home-assistant-skyq-history.md`: Review-first implementation plan for pulling Sky Q watch history from Home Assistant entities.
@@ -38,17 +56,32 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `docs/architecture/feature-8-import-reliability-and-source-health.md`: Review-first implementation plan for resilient import failures, source-health status, and shared warning banners.
 - `docs/architecture/feature-9-home-assistant-current-playing-continuity.md`: Review-first implementation plan for preserving Sky Q programme continuity when Home Assistant current-state detail advances without a matching playback-state transition.
 - `docs/architecture/feature-10-plex-enrichment-and-sources-polish.md`: Review-first implementation plan for Plex playback enrichment and `/sources` UI cleanup.
-- `docs/architecture/feature-11-source-data-retention-controls.md`: Review-first implementation plan for per-source data-retention controls across raw and normalized records.
+- `docs/architecture/feature-11-source-data-retention-controls.md`: Review-first implementation plan for per-source retention across raw records, normalized history, import-job audit rows, and Plex provisional sessions.
 - `docs/architecture/feature-12-analytics-tab.md`: Review-first implementation plan for a dedicated analytics tab covering watch patterns and dataset growth.
 - `lib/`: Server-side data access, formatting, and shared type definitions.
+- `lib/app-config.ts`: App-level environment and timezone helpers.
 - `lib/channels.ts`: Channel normalization and local logo-registry mapping for Sky Q channel branding.
+- `lib/db.ts`: Shared PostgreSQL connection and query helpers.
+- `lib/format.ts`: Formatting helpers used by timeline and source presentation code.
+- `lib/home-assistant.ts`: Home Assistant connectivity and API request helpers.
+- `lib/home-assistant-config.ts`: Home Assistant YAML config loader/writer for sync and retention settings.
+- `lib/home-assistant-import.ts`: Home Assistant raw import and watch-event rebuilding from persisted state history.
 - `lib/plex.ts`: Plex connectivity and API helpers for token-based server access.
-- `lib/plex-import.ts`: Plex raw history import and watch-event normalization from persisted raw Plex records, with current `/status/sessions` playback shown as provisional in-progress entries when relevant.
 - `lib/plex-config.ts`: Plex non-secret scheduled sync configuration loader/writer.
+- `lib/plex-import.ts`: Plex raw history import and watch-event normalization from persisted raw Plex records, with current `/status/sessions` playback shown as provisional in-progress entries when relevant.
+- `lib/source-locks.ts`: Shared advisory-lock keys for per-source import and cleanup coordination.
+- `lib/source-retention.ts`: Retention config parsing, summaries, and per-source cleanup execution.
+- `lib/sources.ts`: Source registry, status derivation, and `/sources` screen data assembly.
+- `lib/timeline.ts`: Timeline query and grouping logic for week, month, and year views.
+- `lib/types.ts`: Shared application types for timeline and source status data.
 - `public/channel-logos/`: Curated local SVG channel logo assets for recognized channels.
+- `public/static/watch-history-main.png`: Main README screenshot of the current app.
 - `scripts/source-sync-worker.ts`: Scheduled source sync worker for Docker Compose, currently handling Home Assistant and Plex.
 - `Dockerfile`: Canonical application container definition for local development.
 - `docker-compose.yml`: Container orchestration for the web application and PostgreSQL database.
+- `next.config.ts`: Next.js runtime configuration.
+- `package.json`: App package manifest, scripts, and dependency declarations.
+- `tsconfig.json`: TypeScript compiler configuration.
 - `.env.example`: Required environment variables for the Docker Compose environment.
 - `README.md`: Repository overview and high-level documentation index.
 
@@ -75,10 +108,11 @@ The current application is a working first version:
 - Home Assistant authentication and Sky Q history import are working
 - Plex source registration, connectivity checks, manual history import, and scheduled sync are available
 - Plex imports rebuild durable timeline history from persisted raw Plex rows, while active sessions remain provisional in-progress entries
-- Plex provisional sessions remain pending until durable history replaces them; retention controls are planned as follow-up source settings
+- per-source retention settings are available on `/sources` for durable history, import-job audit rows, and Plex provisional session data
 - scheduled sync is available through Docker Compose
 - the UI uses live imported data rather than mocked watch-history content
 - `/sources` is a user-facing operations screen with source health, sync cadence, and import-state summaries
+- the worker now also applies per-source retention cleanup inside Docker Compose when a source is set to windowed retention
 
 Current planning is organized as feature-specific architecture documents under `docs/architecture`.
 
@@ -96,15 +130,14 @@ Completed:
 - Feature 8: Import reliability and source-health visibility with degraded source status, a shared warning banner, and clearer `/sources` recovery state
 - Feature 9: Home Assistant current-playing continuity with watch-event rebuilding from persisted raw history so same-channel Sky Q programme transitions survive repeated imports
 - Feature 10: Plex continuity and `/sources` polish with persisted-raw Plex normalization, provisional active-session timeline cues, and operational source summaries
+- Feature 11: source data-retention controls with YAML-backed source settings, `/sources` editing, worker cleanup, and safe retention of import-job audit rows
 
 Planned:
-- Feature 11: source data-retention controls for raw records, normalized history, and source-specific provisional data
 - Feature 12: analytics tab for watch patterns, source contribution, and dataset growth
 
 Recommended next pickup:
-1. Flesh out feature 11 for per-source retention controls, including general source history retention and source-specific provisional cleanup
-2. Flesh out feature 12 for an analytics tab covering watch behavior and dataset growth over time
-3. Preserve the completed Home Assistant and Plex continuity behavior as those follow-up features land
+1. Flesh out feature 12 for an analytics tab covering watch behavior and dataset growth over time
+2. Preserve the completed Home Assistant, Plex, and retention behavior as analytics and later features land
 
 ## Development Workflow
 
@@ -215,6 +248,8 @@ entities:
 sync:
   enabled: false
   interval_minutes: 30
+retention:
+  mode: indefinite
 ```
 
 `base_url` is intentionally stored in YAML because it is not sensitive. The access token must stay in `.env`.
@@ -230,9 +265,31 @@ Example `configs/plex.yaml`:
 sync:
   enabled: false
   interval_minutes: 30
+retention:
+  mode: indefinite
 ```
 
 `PLEX_BASE_URL` and `PLEX_TOKEN` stay in `.env`, while the Plex worker schedule stays in `configs/plex.yaml`.
+
+Retention notes:
+- `retention.mode: indefinite` keeps durable source history, import-job audit rows, and any source-specific provisional rows until normal source updates replace them
+- `retention.mode: windowed` enables cleanup inside the worker
+- `history_days` controls how long durable `raw_import_records` and durable `watch_events` are kept for that source
+- `import_job_days` controls how long unreferenced `import_jobs` rows are kept
+- `provisional_hours` applies to Plex provisional session rows only
+
+Example windowed Plex retention:
+
+```yaml
+sync:
+  enabled: true
+  interval_minutes: 30
+retention:
+  mode: windowed
+  history_days: 365
+  import_job_days: 90
+  provisional_hours: 24
+```
 
 If your Home Assistant instance uses a certificate signed by a private or self-signed CA, also copy `configs/home-assistant-ca.crt.example` to `configs/home-assistant-ca.crt` and paste the PEM-encoded CA certificate there. The app will use that CA file when calling Home Assistant without disabling TLS verification.
 

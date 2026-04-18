@@ -29,7 +29,8 @@ export function SourceListScreen({
   flashMessage,
   flashDetail,
   importSourceAction,
-  updateSyncAction
+  updateSyncAction,
+  updateRetentionAction
 }: {
   sources: SourceStatus[];
   flashTone?: "error" | "success";
@@ -37,6 +38,7 @@ export function SourceListScreen({
   flashDetail?: string;
   importSourceAction: (formData: FormData) => Promise<void>;
   updateSyncAction: (formData: FormData) => Promise<void>;
+  updateRetentionAction: (formData: FormData) => Promise<void>;
 }) {
   const flashStyles =
     flashTone === "error"
@@ -343,6 +345,155 @@ export function SourceListScreen({
                         }}
                       >
                         Save sync settings
+                      </button>
+                    </div>
+                  </form>
+
+                  <form action={updateRetentionAction} className="source-stat-card">
+                    <input type="hidden" name="source_slug" value={source.slug} />
+                    <div style={{ display: "grid", gap: "12px" }}>
+                      <div style={{ display: "grid", gap: "4px" }}>
+                        <span className="eyebrow">Retention</span>
+                        <span className="muted" style={{ fontSize: "0.9rem" }}>
+                          Control how long this source keeps durable history, import logs, and any temporary provisional rows.
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                          gap: "10px"
+                        }}
+                      >
+                        <div className="source-stat-card">
+                          <span className="muted">Current mode</span>
+                          <strong>{source.retentionModeLabel}</strong>
+                        </div>
+                        <div className="source-stat-card">
+                          <span className="muted">History retention</span>
+                          <strong>
+                            {source.retentionHistoryDays ? `${source.retentionHistoryDays} days` : "Unlimited"}
+                          </strong>
+                        </div>
+                        <div className="source-stat-card">
+                          <span className="muted">Import jobs</span>
+                          <strong>
+                            {source.retentionImportJobDays
+                              ? `${source.retentionImportJobDays} days`
+                              : "Unlimited"}
+                          </strong>
+                        </div>
+                        {source.retentionSupportsProvisional ? (
+                          <div className="source-stat-card">
+                            <span className="muted">Provisional rows</span>
+                            <strong>
+                              {source.retentionProvisionalHours
+                                ? `${source.retentionProvisionalHours} hours`
+                                : "Unlimited"}
+                            </strong>
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div style={{ display: "grid", gap: "4px" }}>
+                        <strong style={{ fontSize: "1rem" }}>{source.retentionSummaryLabel}</strong>
+                        <span className="muted" style={{ fontSize: "0.9rem", lineHeight: 1.6 }}>
+                          {source.retentionDetail}
+                        </span>
+                      </div>
+
+                      <label
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          fontSize: "0.92rem"
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          name="retention_keep_indefinite"
+                          defaultChecked={source.retentionModeLabel === "Indefinite"}
+                        />
+                        Keep source data indefinitely
+                      </label>
+
+                      <label style={{ display: "grid", gap: "6px" }}>
+                        <span className="muted" style={{ fontSize: "0.84rem" }}>
+                          Durable history window in days
+                        </span>
+                        <input
+                          type="number"
+                          name="history_days"
+                          min={1}
+                          max={36500}
+                          defaultValue={source.retentionHistoryDays ?? 365}
+                          style={{
+                            borderRadius: "12px",
+                            border: "1px solid var(--line)",
+                            background: "rgba(255,255,255,0.04)",
+                            color: "var(--text)",
+                            padding: "10px 12px"
+                          }}
+                        />
+                      </label>
+
+                      <label style={{ display: "grid", gap: "6px" }}>
+                        <span className="muted" style={{ fontSize: "0.84rem" }}>
+                          Import-job audit window in days
+                        </span>
+                        <input
+                          type="number"
+                          name="import_job_days"
+                          min={1}
+                          max={36500}
+                          defaultValue={source.retentionImportJobDays ?? 90}
+                          style={{
+                            borderRadius: "12px",
+                            border: "1px solid var(--line)",
+                            background: "rgba(255,255,255,0.04)",
+                            color: "var(--text)",
+                            padding: "10px 12px"
+                          }}
+                        />
+                      </label>
+
+                      {source.retentionSupportsProvisional ? (
+                        <label style={{ display: "grid", gap: "6px" }}>
+                          <span className="muted" style={{ fontSize: "0.84rem" }}>
+                            Provisional-session window in hours
+                          </span>
+                          <input
+                            type="number"
+                            name="provisional_hours"
+                            min={1}
+                            max={8760}
+                            defaultValue={source.retentionProvisionalHours ?? 24}
+                            style={{
+                              borderRadius: "12px",
+                              border: "1px solid var(--line)",
+                              background: "rgba(255,255,255,0.04)",
+                              color: "var(--text)",
+                              padding: "10px 12px"
+                            }}
+                          />
+                        </label>
+                      ) : null}
+
+                      <button
+                        type="submit"
+                        style={{
+                          border: "1px solid var(--line)",
+                          borderRadius: "999px",
+                          background: "rgba(255,255,255,0.04)",
+                          color: "var(--text)",
+                          padding: "10px 14px",
+                          fontWeight: 700,
+                          cursor: "pointer"
+                        }}
+                      >
+                        Save retention settings
                       </button>
                     </div>
                   </form>

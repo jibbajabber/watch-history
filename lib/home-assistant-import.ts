@@ -2,6 +2,7 @@ import { getKnownChannelKey } from "@/lib/channels";
 import { getPool, query } from "@/lib/db";
 import { readHomeAssistantConfig } from "@/lib/home-assistant-config";
 import { checkHomeAssistantConnectivity, fetchHomeAssistant } from "@/lib/home-assistant";
+import { getSourceImportLockKey } from "@/lib/source-locks";
 
 type HomeAssistantHistoryState = {
   entity_id: string;
@@ -50,8 +51,6 @@ const ignoredStates = new Set([
 ]);
 const resumableStates = new Set(["playing", "paused", "buffering"]);
 const sessionGapMs = 30 * 60 * 1000;
-const homeAssistantImportLockKey = 7_405_001;
-
 function getAccessToken() {
   const token = process.env.HOME_ASSISTANT_ACCESS_TOKEN;
 
@@ -536,7 +535,7 @@ export async function runHomeAssistantImport() {
   try {
     const lockResult = await lockClient.query<{ acquired: boolean }>(
       "SELECT pg_try_advisory_lock($1) AS acquired",
-      [homeAssistantImportLockKey]
+      [getSourceImportLockKey("home-assistant")]
     );
 
     if (!lockResult.rows[0]?.acquired) {
@@ -599,7 +598,7 @@ export async function runHomeAssistantImport() {
     }
   } finally {
     if (lockAcquired) {
-      await lockClient.query("SELECT pg_advisory_unlock($1)", [homeAssistantImportLockKey]);
+      await lockClient.query("SELECT pg_advisory_unlock($1)", [getSourceImportLockKey("home-assistant")]);
     }
     lockClient.release();
   }

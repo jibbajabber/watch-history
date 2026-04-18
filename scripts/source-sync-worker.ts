@@ -1,6 +1,7 @@
 import { Client } from "pg";
 import { readHomeAssistantConfig } from "@/lib/home-assistant-config";
 import { readPlexConfig } from "@/lib/plex-config";
+import { runSourceRetentionCleanup } from "@/lib/source-retention";
 
 const internalAppUrl = process.env.APP_INTERNAL_URL?.trim() || "http://web:3000";
 const databaseUrl = process.env.DATABASE_URL;
@@ -34,7 +35,8 @@ async function readSyncConfig(slug: SyncTarget["slug"]) {
       ? {
           ok: true as const,
           enabled: result.config.sync.enabled,
-          intervalMinutes: result.config.sync.intervalMinutes
+          intervalMinutes: result.config.sync.intervalMinutes,
+          retention: result.config.retention
         }
       : {
           ok: false as const,
@@ -50,7 +52,8 @@ async function readSyncConfig(slug: SyncTarget["slug"]) {
     ? {
         ok: true as const,
         enabled: result.config.sync.enabled,
-        intervalMinutes: result.config.sync.intervalMinutes
+        intervalMinutes: result.config.sync.intervalMinutes,
+        retention: result.config.retention
       }
     : {
         ok: false as const,
@@ -175,6 +178,28 @@ async function triggerSync(target: SyncTarget) {
 
 async function tickTarget(target: SyncTarget) {
   try {
+    const sync = await readSyncConfig(target.slug);
+
+    if (sync.ok) {
+      const cleanup = await runSourceRetentionCleanup(target.slug, sync.retention);
+
+      if (cleanup.status === "completed") {
+        const deletedRows =
+          cleanup.deletedProvisionalWatchEvents +
+          cleanup.deletedProvisionalRawRecords +
+          cleanup.deletedDurableWatchEvents +
+          cleanup.deletedDurableRawRecords +
+          cleanup.deletedImportJobs;
+
+        if (deletedRows > 0) {
+          log(
+            target.label,
+            `retention cleanup removed ${deletedRows} row(s) (${cleanup.deletedDurableWatchEvents} durable events, ${cleanup.deletedDurableRawRecords} durable raw rows, ${cleanup.deletedImportJobs} import jobs, ${cleanup.deletedProvisionalWatchEvents + cleanup.deletedProvisionalRawRecords} provisional rows)`
+          );
+        }
+      }
+    }
+
     const decision = await shouldTriggerSync(target);
 
     if (decision.shouldRun) {

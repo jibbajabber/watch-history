@@ -1,3 +1,5 @@
 sync:
   enabled: false
   interval_minutes: 30
+retention:
+  mode: indefinite

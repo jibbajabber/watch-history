@@ -54,6 +54,7 @@ When starting or advancing a feature in this repository:
 - When raising a PR from a feature branch, derive the title from the feature name or branch name by replacing hyphens with spaces and capitalizing each word.
 - Keep the PR description simple and outcome-focused, summarizing what the feature achieves rather than reproducing the full implementation detail.
 - Before closing out a feature, review `README.md` and mark the feature complete there if appropriate, along with any relevant file-purpose or workflow updates.
+  Update the `README.md` `Current Structure` section whenever the feature adds files, directories, entrypoints, helpers, or changes the practical responsibility of an existing file or module enough that the codebase map would otherwise become stale.
 - When adding future features to status sections in `README.md`, `AGENTS.md`, or related planning docs, list them under a planned or upcoming section until implementation is actually complete; do not place drafted or proposed features in completed sections just because a spec exists.
 - If implementation or verification would require starting a stopped local Docker Compose stack, ask the user before doing that because the source of truth may currently be a remote Docker deployment.
 
@@ -166,8 +167,10 @@ Potential relationship direction:
 
 - `README.md` should be maintained alongside code changes, not updated later as cleanup.
 - When new directories, modules, or libraries are introduced, document their purpose in `README.md`.
+- When those changes affect how a contributor navigates the repo, update the `README.md` `Current Structure` section in the same change rather than leaving the codebase map implicit.
 - When setup steps, scripts, or workflows change, update `README.md` in the same change.
 - At the end of a feature, review `README.md` and update it where needed so completed features, new files, changed responsibilities, and workflow changes are reflected accurately.
+  This includes adding or revising `Current Structure` entries when the feature introduces new meaningful files or changes which files are important enough to call out.
 - Container-based development and execution commands should be documented as the default and preferred workflow.
 - Required environment variables, env-file conventions, and secret-handling expectations should be documented clearly in `README.md`.
 - If a file or module has a non-obvious responsibility, make that clear in code comments or in `README.md`.
@@ -184,6 +187,7 @@ For new feature work, use this default sequence unless the user explicitly redir
 6. Before starting a stopped local Docker Compose stack for implementation or verification, ask the user whether they want that local stack started.
 7. Implement, verify, and document the feature.
 8. Review `README.md` at feature close-out and update it where needed to mark the feature complete and document any new files, changed responsibilities, or workflow changes.
+   Update the `Current Structure` section whenever those changes materially affect how a contributor should understand or navigate the repo.
    Planned or draft follow-up features should remain explicitly marked as planned rather than being added to completed feature lists.
 9. Update `AGENTS.md` and other relevant docs to record the feature as complete.
 10. When the feature is complete, ask whether the user wants the branch pushed.
@@ -231,17 +235,19 @@ Use this section to record decisions as they are made.
 | 2026-04-18 | Agents must ask before starting a stopped local Docker Compose stack. | The canonical deployment definition is the repo `docker-compose.yml`, but the active application may be running on a remote Docker host that the user must interact with directly. |
 | 2026-04-18 | PRs should use a feature-name-derived Title Case title and a short achievement-focused description. | Replace hyphens with spaces in the feature or branch name, capitalize each word, and keep the body concise. |
 | 2026-04-18 | Feature close-out must include a README review. | Mark completed features in `README.md` where relevant and document any new files, responsibilities, or workflow expectations introduced by the feature. |
+| 2026-04-18 | README close-out guidance must explicitly cover the `Current Structure` section. | When a feature changes the codebase map in a meaningful way, update `README.md` `Current Structure` in the same change rather than relying on implicit discovery. |
 | 2026-04-18 | Feature 10 should rebuild Plex watch events from persisted raw history rows while treating active sessions as provisional. | Durable Plex history should no longer depend only on the latest fetch; current `/status/sessions` entries remain useful but must be shown as in-progress snapshots rather than final history. |
 | 2026-04-18 | Feature 10 should replace `/sources` planning-oriented copy with operational summaries. | Source cards should emphasize health, freshness, sync cadence, and import state instead of internal next-step messaging. |
 | 2026-04-18 | Feature 10 should keep provisional Plex sessions until durable history replaces them. | Hardcoded expiry for pending Plex sessions is deferred; broader cleanup and retention policy belongs in feature 11. |
-| 2026-04-18 | Feature 11 should define per-source data-retention controls. | Retention should cover raw records, normalized watch events, and source-specific provisional data rather than only Plex pending sessions. |
+| 2026-04-18 | Feature 11 should define per-source data-retention controls. | Retention should cover raw records, normalized watch events, import-job audit rows, and source-specific provisional data rather than only Plex pending sessions. |
+| 2026-04-18 | Feature 11 v1 should reuse per-source YAML config and `/sources` editing patterns. | Retention should ship first as non-secret source config alongside sync settings, with history retention in days and optional provisional retention in hours where the source needs it. |
+| 2026-04-18 | Feature 11 is complete with per-source YAML retention settings and worker cleanup. | `/sources` now edits retention alongside sync settings, Home Assistant and Plex default safely to indefinite retention, and cleanup removes only data outside the configured source window while protecting raw-row-linked import jobs. |
 | 2026-04-18 | Feature 12 should add a dedicated analytics tab. | Analytics should cover both watch behavior and dataset growth using only real stored data. |
 
 ## Next Discovery Steps
 
-1. Flesh out feature 11 for per-source retention controls, including general source history retention and source-specific provisional cleanup.
-2. Flesh out feature 12 for an analytics tab covering watch behavior and dataset growth over time.
-3. Preserve the completed Home Assistant and Plex raw-record continuity behavior as future imports evolve.
+1. Flesh out feature 12 for an analytics tab covering watch behavior and dataset growth over time.
+2. Preserve the completed Home Assistant, Plex, and retention behavior as future imports evolve.
 
 ## Feature Progress
 
@@ -265,7 +271,7 @@ Use this section to record decisions as they are made.
   Home Assistant imports now rebuild from persisted raw records so long same-channel Sky Q viewing preserves programme history across repeated imports.
 - Feature 10: Complete
   Plex imports now rebuild durable watch events from persisted raw history rows, provisional active sessions are shown as in-progress timeline entries, and `/sources` now emphasizes operational summaries over internal next-step copy.
-- Feature 11: Planned
-  Source data-retention controls need to cover general source history retention, raw-record cleanup, normalized-event cleanup, and source-specific provisional data behavior.
+- Feature 11: Complete
+  Source data-retention controls are implemented with per-source YAML settings, `/sources` editing, worker-driven cleanup, durable-history cleanup, and Plex provisional retention handling.
 - Feature 12: Planned
   A dedicated analytics tab should surface watch patterns, source contribution, and dataset growth from real stored data.

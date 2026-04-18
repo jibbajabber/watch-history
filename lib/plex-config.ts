@@ -1,6 +1,11 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import YAML from "yaml";
+import {
+  parseSourceRetentionConfig,
+  serializeSourceRetentionConfig,
+  type SourceRetentionConfig
+} from "@/lib/source-retention";
 
 const configDirectory = path.join(process.cwd(), "configs");
 const configPath = path.join(configDirectory, "plex.yaml");
@@ -11,6 +16,7 @@ type ParsedPlexConfig = {
     enabled?: unknown;
     interval_minutes?: unknown;
   };
+  retention?: unknown;
 };
 
 export type PlexConfig = {
@@ -18,6 +24,7 @@ export type PlexConfig = {
     enabled: boolean;
     intervalMinutes: number;
   };
+  retention: SourceRetentionConfig;
 };
 
 function parseConfigDocument(raw: string): PlexConfig {
@@ -37,7 +44,10 @@ function parseConfigDocument(raw: string): PlexConfig {
     sync: {
       enabled: parsed.sync?.enabled === true,
       intervalMinutes
-    }
+    },
+    retention: parseSourceRetentionConfig(parsed.retention, {
+      supportsProvisional: true
+    })
   };
 }
 
@@ -79,7 +89,10 @@ export async function writePlexConfig(config: PlexConfig) {
     sync: {
       enabled: config.sync.enabled,
       interval_minutes: config.sync.intervalMinutes
-    }
+    },
+    retention: serializeSourceRetentionConfig(config.retention, {
+      supportsProvisional: true
+    })
   });
 
   await writeFile(configPath, serialized, "utf8");

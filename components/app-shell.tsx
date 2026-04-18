@@ -1,13 +1,14 @@
 import Link from "next/link";
-import type { UrlObject } from "url";
 import { getSourceHealthNotice } from "@/lib/sources";
 import type { AppSection, TimelineView } from "@/lib/types";
 
-const views: Array<{ href: UrlObject; label: string; view: AppSection }> = [
-  { href: { pathname: "/[view]", query: { view: "week" } }, label: "Week", view: "week" },
-  { href: { pathname: "/[view]", query: { view: "month" } }, label: "Month", view: "month" },
-  { href: { pathname: "/[view]", query: { view: "year" } }, label: "Year", view: "year" },
-  { href: { pathname: "/sources" }, label: "Sources", view: "sources" }
+type AppShellHref = `/${TimelineView}` | "/sources";
+
+const views: Array<{ href: AppShellHref; label: string; view: AppSection }> = [
+  { href: "/week", label: "Week", view: "week" },
+  { href: "/month", label: "Month", view: "month" },
+  { href: "/year", label: "Year", view: "year" },
+  { href: "/sources", label: "Sources", view: "sources" }
 ];
 
 const sectionCards: Record<

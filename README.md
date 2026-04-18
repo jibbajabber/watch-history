@@ -60,6 +60,7 @@ Feature work in this repository follows a spec-first workflow:
 - ask the user whether they want a feature branch created before implementation starts
 - if a branch is created, name it from the feature name without the `.md` suffix
 - if the local Docker Compose stack is not already running, ask the user before starting it because their active environment may be a remote Docker host
+- review `README.md` at the end of the feature and update it where needed to mark the feature complete and document any new files, changed responsibilities, or workflow changes
 - once the feature is complete, ask whether the user wants the branch pushed and whether they want a PR raised
 - if a PR is raised, title it from the feature or branch name by replacing hyphens with spaces and capitalizing each word, then use a short description that explains what the feature achieves
 
@@ -89,11 +90,12 @@ Completed:
 - Feature 6: Channel and platform branding with a curated local registry and timeline-row rendering
 - Feature 7: Plex source support with env-based connectivity, manual history import, active-session enrichment, and scheduled sync
 - Feature 8: Import reliability and source-health visibility with degraded source status, a shared warning banner, and clearer `/sources` recovery state
+- Feature 9: Home Assistant current-playing continuity with watch-event rebuilding from persisted raw history so same-channel Sky Q programme transitions survive repeated imports
 
 Recommended next pickup:
-1. Start feature 9 for Sky Q current-playing continuity so same-channel programme changes are preserved in watch history
-2. Validate how Home Assistant history and current-state snapshots behave when Sky Q stays in `playing` across programme boundaries
-3. Move Plex enrichment and `/sources` page polish to feature 10 after the Sky Q continuity gap is addressed
+1. Start feature 10 for Plex enrichment and `/sources` page polish
+2. Preserve the completed Home Assistant continuity behavior while improving Plex detail and simplifying `/sources`
+3. Confirm whether any additional source priorities should follow Plex
 
 ## Development Workflow
 
@@ -172,6 +174,7 @@ Normalization notes:
 - generic device-only rows such as `Sky Q Bedroom` or `Sky Q Livingroom` are filtered out unless Home Assistant exposes meaningful programme metadata
 - real timeline entries preserve channel/source context and device context separately
 - current entity state is merged into import processing so currently playing content can appear even when history has not yet emitted a fresh transition
+- persisted raw Home Assistant history is now the normalization source of truth, so earlier programme segments survive later imports even when a newer fetch is less complete than the previously captured raw data
 - recognized channels now persist a high-confidence `metadata.channel_key` when matched by the local registry, while unknown channels remain text-only
 
 ## Scheduled Sync

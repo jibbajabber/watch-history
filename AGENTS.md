@@ -53,6 +53,7 @@ When starting or advancing a feature in this repository:
 - After that, ask the user whether they want a PR raised.
 - When raising a PR from a feature branch, derive the title from the feature name or branch name by replacing hyphens with spaces and capitalizing each word.
 - Keep the PR description simple and outcome-focused, summarizing what the feature achieves rather than reproducing the full implementation detail.
+- Before closing out a feature, review `README.md` and mark the feature complete there if appropriate, along with any relevant file-purpose or workflow updates.
 - If implementation or verification would require starting a stopped local Docker Compose stack, ask the user before doing that because the source of truth may currently be a remote Docker deployment.
 
 ## Engineering Standards
@@ -165,6 +166,7 @@ Potential relationship direction:
 - `README.md` should be maintained alongside code changes, not updated later as cleanup.
 - When new directories, modules, or libraries are introduced, document their purpose in `README.md`.
 - When setup steps, scripts, or workflows change, update `README.md` in the same change.
+- At the end of a feature, review `README.md` and update it where needed so completed features, new files, changed responsibilities, and workflow changes are reflected accurately.
 - Container-based development and execution commands should be documented as the default and preferred workflow.
 - Required environment variables, env-file conventions, and secret-handling expectations should be documented clearly in `README.md`.
 - If a file or module has a non-obvious responsibility, make that clear in code comments or in `README.md`.
@@ -180,9 +182,11 @@ For new feature work, use this default sequence unless the user explicitly redir
 5. If they do, create the branch from the feature name without the `.md` suffix.
 6. Before starting a stopped local Docker Compose stack for implementation or verification, ask the user whether they want that local stack started.
 7. Implement, verify, and document the feature.
-8. When the feature is complete, ask whether the user wants the branch pushed.
-9. Ask whether the user wants a PR raised.
-10. If a PR is raised, use a Title Case title derived from the feature name or branch name with hyphens replaced by spaces, and write a short description summarizing what the feature achieves.
+8. Review `README.md` at feature close-out and update it where needed to mark the feature complete and document any new files, changed responsibilities, or workflow changes.
+9. Update `AGENTS.md` and other relevant docs to record the feature as complete.
+10. When the feature is complete, ask whether the user wants the branch pushed.
+11. Ask whether the user wants a PR raised.
+12. If a PR is raised, use a Title Case title derived from the feature name or branch name with hyphens replaced by spaces, and write a short description summarizing what the feature achieves.
 
 ## Decision Log
 
@@ -219,16 +223,18 @@ Use this section to record decisions as they are made.
 | 2026-04-13 | Feature 8 is complete with resilient import actions, worker hardening, and source-health visibility. | Failed manual imports now return safely to `/sources`, scheduled sync ticks are guarded against overlap and hangs, and the UI surfaces failing, stale, and recovered source states without blocking the app. |
 | 2026-04-18 | Feature 9 is redefined to improve Home Assistant current-playing continuity for Sky Q. | The new priority is preserving programme history when Sky Q stays on the same channel and Home Assistant only exposes the latest current programme details. |
 | 2026-04-18 | The previous Plex enrichment and `/sources` polish scope moves from Feature 9 to Feature 10. | Sky Q current-playing continuity is a higher-priority source-truth issue and should be addressed before further Plex/UI polish. |
+| 2026-04-18 | Feature 9 is complete with raw-record-driven Home Assistant normalization. | Home Assistant imports now rebuild normalized watch events from persisted raw records so same-channel Sky Q programme transitions survive later imports. |
 | 2026-04-18 | Agents should not read local env files or similar secret-bearing files unless the user explicitly asks. | Secret-backed tasks should prefer user-run commands, sanitized inputs, or explicit permission to inspect sensitive configuration. |
 | 2026-04-18 | Feature work should follow a spec-first, review-first, branch-on-request workflow. | Define the feature under `docs/architecture`, review it with the user, update project docs, then ask whether to create a branch before implementation; after completion ask about push and PR steps. |
 | 2026-04-18 | Agents must ask before starting a stopped local Docker Compose stack. | The canonical deployment definition is the repo `docker-compose.yml`, but the active application may be running on a remote Docker host that the user must interact with directly. |
 | 2026-04-18 | PRs should use a feature-name-derived Title Case title and a short achievement-focused description. | Replace hyphens with spaces in the feature or branch name, capitalize each word, and keep the body concise. |
+| 2026-04-18 | Feature close-out must include a README review. | Mark completed features in `README.md` where relevant and document any new files, responsibilities, or workflow expectations introduced by the feature. |
 
 ## Next Discovery Steps
 
-1. Start feature 9 for Home Assistant current-playing continuity on Sky Q.
-2. Confirm how Home Assistant history and appended current-state snapshots behave when the same channel moves between programmes without a playback-state transition.
-3. Start feature 10 for Plex enrichment and `/sources` page polish after the Sky Q continuity gap is addressed.
+1. Start feature 10 for Plex enrichment and `/sources` page polish.
+2. Preserve the completed Home Assistant continuity behavior while improving Plex detail and simplifying `/sources`.
+3. Confirm whether any source priorities should follow Plex after feature 10.
 
 ## Feature Progress
 
@@ -248,7 +254,7 @@ Use this section to record decisions as they are made.
   Plex source support is implemented with env-based connectivity, manual history import, active-session enrichment, and scheduled sync.
 - Feature 8: Complete
   Import reliability, source-health status, safe manual failure handling, worker resilience, and shared warning-banner behavior are implemented.
-- Feature 9: Planned
-  Home Assistant current-playing continuity for Sky Q needs to be implemented so long same-channel viewing preserves programme history instead of collapsing to the latest current programme.
+- Feature 9: Complete
+  Home Assistant imports now rebuild from persisted raw records so long same-channel Sky Q viewing preserves programme history across repeated imports.
 - Feature 10: Planned
-  Plex enrichment and `/sources` UI polish need to be implemented after the Sky Q continuity work.
+  Plex enrichment and `/sources` UI polish need to be implemented after the completed Sky Q continuity work.

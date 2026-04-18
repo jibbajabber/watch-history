@@ -243,11 +243,13 @@ Use this section to record decisions as they are made.
 | 2026-04-18 | Feature 11 v1 should reuse per-source YAML config and `/sources` editing patterns. | Retention should ship first as non-secret source config alongside sync settings, with history retention in days and optional provisional retention in hours where the source needs it. |
 | 2026-04-18 | Feature 11 is complete with per-source YAML retention settings and worker cleanup. | `/sources` now edits retention alongside sync settings, Home Assistant and Plex default safely to indefinite retention, and cleanup removes only data outside the configured source window while protecting raw-row-linked import jobs. |
 | 2026-04-18 | Feature 12 should add a dedicated analytics tab. | Analytics should cover both watch behavior and dataset growth using only real stored data. |
+| 2026-04-18 | Feature 12 v1 should start as a single analytics destination with overview, watch patterns, dataset growth, and import activity sections. | The first slice should use only existing `watch_events`, `raw_import_records`, `import_jobs`, and `sources` data, without adding speculative health-history or metadata-heavy dashboards. |
+| 2026-04-18 | Feature 12 is complete with a dedicated analytics tab. | `/analytics` now exposes real-data overview totals, monthly watch and dataset trends, source contribution, and recent import activity using only stored `watch_events`, `raw_import_records`, `import_jobs`, and `sources` data. |
 
 ## Next Discovery Steps
 
-1. Flesh out feature 12 for an analytics tab covering watch behavior and dataset growth over time.
-2. Preserve the completed Home Assistant, Plex, and retention behavior as future imports evolve.
+1. Decide whether day-of-week patterns and streak-style metrics belong in a Feature 12 follow-up pass or a later feature.
+2. Preserve the completed Home Assistant, Plex, and retention behavior as analytics and later features land.
 
 ## Feature Progress
 
@@ -273,5 +275,5 @@ Use this section to record decisions as they are made.
   Plex imports now rebuild durable watch events from persisted raw history rows, provisional active sessions are shown as in-progress timeline entries, and `/sources` now emphasizes operational summaries over internal next-step copy.
 - Feature 11: Complete
   Source data-retention controls are implemented with per-source YAML settings, `/sources` editing, worker-driven cleanup, durable-history cleanup, and Plex provisional retention handling.
-- Feature 12: Planned
-  A dedicated analytics tab should surface watch patterns, source contribution, and dataset growth from real stored data.
+- Feature 12: Complete
+  A dedicated analytics tab is implemented with overview totals, watch-pattern trends, dataset growth, source contribution, and recent import activity from real stored data.

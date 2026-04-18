@@ -170,6 +170,13 @@ type HomeAssistantDerivedStatus = Omit<
   | "syncIntervalMinutes"
   | "syncStatusLabel"
   | "nextSyncLabel"
+  | "retentionModeLabel"
+  | "retentionSummaryLabel"
+  | "retentionDetail"
+  | "retentionHistoryDays"
+  | "retentionImportJobDays"
+  | "retentionProvisionalHours"
+  | "retentionSupportsProvisional"
 >;
 
 function getHomeAssistantStatus(

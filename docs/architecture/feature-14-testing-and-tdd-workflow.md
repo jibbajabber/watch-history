@@ -207,11 +207,11 @@ Verified helper extraction completed so far:
 - `lib/plex-normalization.ts`
 
 Production modules already rewired to extracted helpers:
+- `lib/analytics.ts` now uses `lib/analytics-data.ts`
 - `lib/sources.ts` now uses `lib/source-status.ts`
 - `lib/timeline.ts` now uses `lib/timeline-data.ts`
 
 Production modules not yet rewired to their extracted pure helpers:
-- `lib/analytics.ts` still contains its original shaping code even though `lib/analytics-data.ts` now exists
 - `lib/home-assistant-import.ts` still contains its original normalization logic even though `lib/home-assistant-normalization.ts` now exists
 - `lib/plex-import.ts` still contains its original normalization logic even though `lib/plex-normalization.ts` now exists
 
@@ -221,30 +221,32 @@ Current automated suite covers:
 - source-retention parsing and summary helpers
 - timeline windowing, mapping, summary, insights, and highlights helpers
 - analytics response-shaping helpers
+- analytics query orchestration in `lib/analytics.ts` via mocked DB and curation seams
 - Home Assistant normalization helpers
 - Plex normalization helpers
+- source status assembly and shared health notices in `lib/sources.ts` via mocked orchestration tests
 
 Last verified commands:
 - `docker compose exec web npm run typecheck`
 - `docker compose exec web npm run test`
 
 Last verified results:
-- `30` tests passed across `7` files
-- overall coverage: `31.42%`
+- `34` tests passed across `9` files
+- overall coverage: `43.24%`
+- `analytics.ts`: `100%`
 - `analytics-data.ts`: `98.41%`
 - `timeline-data.ts`: `90.95%`
 - `home-assistant-normalization.ts`: `97.72%`
 - `plex-normalization.ts`: `92.16%`
 - `format.ts`: `100%`
-- `source-status.ts`: `58.21%`
-- `source-retention.ts`: `32%`
+- `source-status.ts`: `64.78%`
+- `source-retention.ts`: `35.11%`
+- `sources.ts`: `90.49%`
 
 Low-coverage or uncovered areas still left:
-- `analytics.ts`
 - `timeline.ts`
 - `home-assistant-import.ts`
 - `plex-import.ts`
-- `sources.ts`
 - `source-retention.ts`
 - any DB-backed/query-heavy modules
 
@@ -253,24 +255,21 @@ Low-coverage or uncovered areas still left:
 If work resumes in a new context window, pick up from this exact point:
 - the Docker-first test workflow is implemented and working
 - the repo already has the extracted pure helper modules listed above
-- the suite is currently still helper-heavy rather than DB-heavy
-- the best next move is to rewire the remaining production modules to consume their extracted helpers before adding DB-backed tests
+- the suite now also includes mocked coverage for `lib/sources.ts` and `lib/analytics.ts`, but remains mostly helper-heavy rather than DB-heavy
+- Resume Feature 14 on the non-DB path, starting with `lib/home-assistant-import.ts` coverage.
 
 Recommended next sequence:
-1. Rewire `lib/analytics.ts` to use `lib/analytics-data.ts`.
-2. Rewire `lib/home-assistant-import.ts` to use `lib/home-assistant-normalization.ts`.
-3. Rewire `lib/plex-import.ts` to use `lib/plex-normalization.ts`.
-4. Re-run `docker compose exec web npm run typecheck` and `docker compose exec web npm run test`.
-5. Decide whether the next coverage slice should target:
-   `lib/source-retention.ts` cleanup-path logic, or
-   a first DB-backed test layer for `timeline.ts` / `analytics.ts`, or
-   importer orchestration tests around persisted raw rows.
+Explicit non-DB resume order:
+- first: `lib/home-assistant-import.ts`
+- second: `lib/plex-import.ts`
+- third: `lib/source-retention.ts`
 
 Recommended resume assumptions:
 - keep GitHub Actions deferred to Feature 15
 - keep browser/UI testing out of scope
 - keep using helper extraction before introducing DB-heavy tests when practical
 - do not add coverage thresholds yet
+- do not introduce a DB-backed test layer in Feature 14
 
 ## Open Questions
 

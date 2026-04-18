@@ -81,7 +81,7 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `public/channel-logos/`: Curated local SVG channel logo assets for recognized channels.
 - `public/static/watch-history-main.png`: Main README screenshot of the current app.
 - `scripts/source-sync-worker.ts`: Scheduled source sync worker for Docker Compose, currently handling Home Assistant and Plex.
-- `tests/`: `vitest` suites for pure server-side helpers and future container-first automated coverage.
+- `tests/`: `vitest` suites for pure server-side helpers plus mocked server-side orchestration coverage such as source status assembly.
 - `Dockerfile`: Canonical application container definition for local development.
 - `docker-compose.yml`: Container orchestration for the web application and PostgreSQL database.
 - `next.config.ts`: Next.js runtime configuration.
@@ -141,12 +141,13 @@ Completed:
 - Feature 11: source data-retention controls with YAML-backed source settings, `/sources` editing, worker cleanup, and safe retention of import-job audit rows
 - Feature 12: analytics tab for overview, watch patterns, dataset growth, source contribution, and import activity from real stored data
 - Feature 13: favourites tab with persistent favourite and hide curation, hidden-item exclusion from default timeline and analytics views, and recovery of hidden items from `/favourites`
-- Feature 14: container-first local automated testing with `vitest`, coverage output, helper-focused tests, and documented TDD guidance
+- Feature 14: container-first local automated testing with `vitest`, coverage output, helper-focused tests, mocked source and analytics orchestration coverage, and documented TDD guidance
 
 Recommended next pickup:
 1. Pick up Feature 15 for CI or GitHub Actions once the local container-first test workflow is stable enough to enforce remotely
-2. Decide whether the next testing slice should add DB-backed importer coverage or stay focused on more extracted server-side helpers
-3. Decide whether streak and time-of-day metrics belong in a Feature 12 follow-up pass or a later feature
+2. Resume Feature 14 on the non-DB path, starting with `lib/home-assistant-import.ts` coverage
+3. If Feature 14 testing resumes before Feature 15, continue with `lib/plex-import.ts`, then `lib/source-retention.ts`
+4. Decide whether streak and time-of-day metrics belong in a Feature 12 follow-up pass or a later feature
 
 ## Development Workflow
 
@@ -174,7 +175,8 @@ Canonical commands:
 `npm run test` runs `vitest` in coverage mode and should finish with a text coverage summary while also writing the HTML report under `coverage/`.
 
 Current test scope:
-- pure server-side helpers such as formatting, source retention, source-status derivation, timeline shaping, and analytics response mapping
+- pure server-side helpers such as formatting, source retention, source-status derivation, timeline shaping, analytics response mapping, and importer normalization
+- mocked server-side orchestration coverage for source status assembly, shared health notices, and analytics query shaping
 - no browser automation yet
 - no mandatory coverage threshold yet
 

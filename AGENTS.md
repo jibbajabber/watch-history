@@ -276,12 +276,16 @@ Use this section to record decisions as they are made.
 | 2026-04-18 | Feature 14 implementation starts with `vitest` coverage in the `web` container and pure helper tests. | The initial automated suite covers formatting, retention config logic, and extracted source-status helpers, with coverage output shown by `npm run test` and no minimum threshold yet. |
 | 2026-04-18 | Feature 14 is complete with container-first `vitest` workflow and coverage output. | The repository now has Docker-native test commands, helper-focused automated coverage, README and AGENTS TDD guidance, and CI intentionally deferred to Feature 15. |
 | 2026-04-18 | Feature 14 coverage expansion now includes extracted timeline and analytics helpers. | The helper-focused suite now covers timeline shaping and analytics response mapping in addition to formatting, retention, and source-status logic, while DB-backed import and query coverage remains a follow-up slice. |
+| 2026-04-18 | Feature 14 coverage expansion now includes mocked `sources.ts` orchestration tests. | The container-first suite now covers source status assembly and shared health notices without introducing the DB-backed test layer yet. |
+| 2026-04-18 | Feature 14 coverage expansion now includes mocked `analytics.ts` orchestration tests and helper rewiring. | The production analytics module now uses `lib/analytics-data.ts`, and the suite covers analytics query orchestration without introducing a DB-backed test layer. |
+| 2026-04-18 | Remaining Feature 14 coverage work should stay non-DB and resume with importer/helper rewiring. | Resume order is `lib/home-assistant-import.ts`, then `lib/plex-import.ts`, then `lib/source-retention.ts`; DB-backed testing moves to a follow-up feature. |
 
 ## Next Discovery Steps
 
 1. Pick up Feature 15 for CI or GitHub Actions now that the local container-first test workflow exists.
-2. Decide whether the next testing slice should target DB-backed importer coverage or continue expanding pure server-side helper coverage.
-3. Decide whether day-of-week patterns and streak-style metrics belong in a Feature 12 follow-up pass or a later feature.
+2. Resume Feature 14 on the non-DB path, starting with `lib/home-assistant-import.ts` coverage.
+3. If Feature 14 resumes beyond that first slice, continue with `lib/plex-import.ts`, then `lib/source-retention.ts`.
+4. Decide whether day-of-week patterns and streak-style metrics belong in a Feature 12 follow-up pass or a later feature.
 
 ## Feature Progress
 
@@ -312,4 +316,4 @@ Use this section to record decisions as they are made.
 - Feature 13: Complete
   A curation layer now lets the user favourite and hide individual timeline items, uses recommendation-oriented language in the curated experience, excludes hidden items from default timeline and analytics views, and recovers curated entries from a dedicated `/favourites` tab built on top of imported history.
 - Feature 14: Complete
-  The repository now has a container-first local automated testing workflow using `vitest`, text and HTML coverage output, initial helper-focused tests, and documented TDD expectations, with CI deferred to Feature 15.
+  The repository now has a container-first local automated testing workflow using `vitest`, text and HTML coverage output, helper-focused and mocked orchestration tests, extracted-helper rewiring for analytics, and documented TDD expectations, with CI deferred to Feature 15.

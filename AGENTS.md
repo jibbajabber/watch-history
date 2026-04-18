@@ -44,6 +44,8 @@ When working in this repository:
 
 When starting or advancing a feature in this repository:
 - Create or update a feature spec first at `docs/architecture/<feature-name>.md` before implementation work begins.
+- Keep `docs/architecture/README.md` updated when a feature spec is added, renamed, removed, or changes role enough that the architecture index would become stale.
+  When a feature has a PR, update the architecture index entry with the real PR number/link and a `Delivered` timestamp generated at PR creation time, including the correct day name in the format `Saturday, 18 April 2026, 18:30`.
 - Use that spec to drive a review and discussion with the user before coding.
 - Surface open questions explicitly and gather any missing real-world data before locking the implementation approach.
 - Update all relevant project-definition files when a feature is introduced or clarified, including `AGENTS.md`, `README.md`, and any supporting discovery notes that materially inform the feature.
@@ -55,6 +57,7 @@ When starting or advancing a feature in this repository:
 - Keep the PR description simple and outcome-focused, summarizing what the feature achieves rather than reproducing the full implementation detail.
 - Before closing out a feature, review `README.md` and mark the feature complete there if appropriate, along with any relevant file-purpose or workflow updates.
   Update the `README.md` `Current Structure` section whenever the feature adds files, directories, entrypoints, helpers, or changes the practical responsibility of an existing file or module enough that the codebase map would otherwise become stale.
+  Use the level of detail that best explains the repo: call out individual files when they are meaningful navigation landmarks, but prefer a single directory-level entry when enumerating every file would add noise without improving the map.
 - When adding future features to status sections in `README.md`, `AGENTS.md`, or related planning docs, list them under a planned or upcoming section until implementation is actually complete; do not place drafted or proposed features in completed sections just because a spec exists.
 - If implementation or verification would require starting a stopped local Docker Compose stack, ask the user before doing that because the source of truth may currently be a remote Docker deployment.
 
@@ -167,10 +170,13 @@ Potential relationship direction:
 
 - `README.md` should be maintained alongside code changes, not updated later as cleanup.
 - When new directories, modules, or libraries are introduced, document their purpose in `README.md`.
+- Keep `docs/architecture/README.md` in sync with the architecture-spec directory so contributors have a current per-spec index instead of relying on implicit discovery.
+  For completed features with PRs, record the actual PR number and derive the day-of-week for the `Delivered` timestamp from the current local date/time when the PR is raised.
 - When those changes affect how a contributor navigates the repo, update the `README.md` `Current Structure` section in the same change rather than leaving the codebase map implicit.
 - When setup steps, scripts, or workflows change, update `README.md` in the same change.
 - At the end of a feature, review `README.md` and update it where needed so completed features, new files, changed responsibilities, and workflow changes are reflected accurately.
   This includes adding or revising `Current Structure` entries when the feature introduces new meaningful files or changes which files are important enough to call out.
+  When a directory is better understood as one coherent area, document the directory's responsibility instead of exhaustively listing every file beneath it.
 - Container-based development and execution commands should be documented as the default and preferred workflow.
 - Required environment variables, env-file conventions, and secret-handling expectations should be documented clearly in `README.md`.
 - If a file or module has a non-obvious responsibility, make that clear in code comments or in `README.md`.
@@ -180,6 +186,7 @@ Potential relationship direction:
 
 For new feature work, use this default sequence unless the user explicitly redirects it:
 1. Create or refine the feature spec at `docs/architecture/<feature-name>.md`.
+   Update `docs/architecture/README.md` in the same change when the spec inventory or feature map changes.
 2. Review the spec with the user, answer open questions, and gather any real source data needed to de-risk the work.
 3. Update `AGENTS.md`, `README.md`, and any other relevant docs to record the feature and its current status.
 4. Ask the user whether they want a feature branch created before implementation starts.
@@ -194,6 +201,7 @@ For new feature work, use this default sequence unless the user explicitly redir
 11. When the feature is complete, ask whether the user wants the branch pushed.
 12. Ask whether the user wants a PR raised.
 13. If a PR is raised, use a Title Case title derived from the feature name or branch name with hyphens replaced by spaces, and write a short description summarizing what the feature achieves.
+14. When the PR exists, update `docs/architecture/README.md` with the real PR reference and a `Delivered` timestamp derived at that time, including the correct day name rather than a guessed or copied label.
 
 ## Decision Log
 

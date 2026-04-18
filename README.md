@@ -53,20 +53,8 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `db/init/`: PostgreSQL initialization scripts for the first application schema.
 - `db/init/001_initial.sql`: Initial schema for sources, import jobs, raw import records, media items, and watch events.
 - `db/init/002_watch_event_curation.sql`: Initial schema extension for persistent watch-event curation.
-- `docs/architecture/feature-1-app-scaffold.md`: Review-first implementation plan for the application scaffold and weekly, monthly, and yearly views.
-- `docs/architecture/feature-2-home-assistant-auth.md`: Review-first implementation plan for Home Assistant authentication.
-- `docs/architecture/feature-3-home-assistant-skyq-history.md`: Review-first implementation plan for pulling Sky Q watch history from Home Assistant entities.
-- `docs/architecture/feature-4-ui-summaries-and-analytics.md`: Review-first implementation plan for richer timeline summaries and analytics.
-- `docs/architecture/feature-5-scheduled-home-assistant-sync.md`: Review-first implementation plan for scheduled Home Assistant sync.
-- `docs/architecture/feature-6-channel-logos.md`: Review-first implementation plan for channel-logo discovery and rendering.
-- `docs/architecture/feature-7-plex-source-support.md`: Review-first implementation plan for the first Plex source integration.
-- `docs/architecture/feature-8-import-reliability-and-source-health.md`: Review-first implementation plan for resilient import failures, source-health status, and shared warning banners.
-- `docs/architecture/feature-9-home-assistant-current-playing-continuity.md`: Review-first implementation plan for preserving Sky Q programme continuity when Home Assistant current-state detail advances without a matching playback-state transition.
-- `docs/architecture/feature-10-plex-enrichment-and-sources-polish.md`: Review-first implementation plan for Plex playback enrichment and `/sources` UI cleanup.
-- `docs/architecture/feature-11-source-data-retention-controls.md`: Review-first implementation plan for per-source retention across raw records, normalized history, import-job audit rows, and Plex provisional sessions.
-- `docs/architecture/feature-12-analytics-tab.md`: Review-first implementation plan for a dedicated analytics tab covering watch patterns and dataset growth.
-- `docs/architecture/feature-13-favourites-and-curation.md`: Review-first implementation plan for favourites, recommendations, and hidden timeline-item curation.
-- `docs/architecture/feature-14-testing-and-tdd-workflow.md`: Review-first implementation plan for container-first automated testing and TDD workflow guidance.
+- `docs/architecture/`: Feature specs, architecture notes, and implementation-shaping decisions that drive review-first development for each major slice of the product.
+                        See [docs/architecture/README.md](docs/architecture/README.md): Index of architecture specs, their purpose, and the feature-by-feature map for this planning area.
 - `lib/`: Server-side data access, formatting, and shared type definitions.
 - `lib/app-config.ts`: App-level environment and timezone helpers.
 - `lib/analytics.ts`: Server-side analytics queries for overview totals, watch-pattern rollups, dataset growth, and import activity.

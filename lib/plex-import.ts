@@ -111,6 +111,27 @@ function formatProgressLabel(viewOffsetMs: number | null, durationMs: number | n
   return `${watchedMinutes} of ${totalMinutes} min (${percent}%)`;
 }
 
+function buildSessionContentKey(item: PlexSessionItem) {
+  return [
+    item.ratingKey ?? "no-rating-key",
+    item.key ?? "no-key",
+    item.grandparentKey ?? "no-grandparent-key",
+    item.parentKey ?? "no-parent-key",
+    item.type ?? "no-type",
+    buildNormalizedTitle(item)
+  ].join("::");
+}
+
+function makeSessionSourceRecordId(item: PlexSessionItem) {
+  const sessionId = item.Session?.id;
+
+  if (!sessionId) {
+    throw new Error("Plex session row is missing Session.id.");
+  }
+
+  return `session::${sessionId}::${buildSessionContentKey(item)}`;
+}
+
 function normalizeHistoryItem(
   item: PlexHistoryItem,
   rawImportRecordId: string | null = null
@@ -292,11 +313,7 @@ async function upsertRawImportRecord(importJobId: string, sourceId: string, item
 }
 
 async function upsertRawSessionRecord(importJobId: string, sourceId: string, item: PlexSessionItem) {
-  const sessionId = item.Session?.id;
-
-  if (!sessionId) {
-    throw new Error("Plex session row is missing Session.id.");
-  }
+  const sourceRecordId = makeSessionSourceRecordId(item);
 
   const result = await query<RawRecordRow>(
     `
@@ -313,7 +330,7 @@ async function upsertRawSessionRecord(importJobId: string, sourceId: string, ite
           imported_at = NOW()
       RETURNING id
     `,
-    [importJobId, sourceId, `session::${sessionId}`, JSON.stringify(item)]
+    [importJobId, sourceId, sourceRecordId, JSON.stringify(item)]
   );
 
   return result.rows[0].id;
@@ -494,17 +511,12 @@ export async function runPlexImport() {
       const persistedSessionRows = await loadPersistedSessionRows(sourceId);
       await pruneExpiredSessionRecords(sourceId, persistedSessionRows, persistedHistory);
       const remainingSessionRows = await loadPersistedSessionRows(sourceId);
-      const activeSessionIds = new Set(
-        activeSessions
-          .map((session) => session.Session?.id)
-          .filter((sessionId): sessionId is string => Boolean(sessionId))
-      );
+      const activeSessionRecordIds = new Set(activeSessions.map((session) => makeSessionSourceRecordId(session)));
       const normalized = [
         ...persistedHistoryRows.map((row) => normalizeHistoryItem(row.payload as PlexHistoryItem, row.id)),
         ...remainingSessionRows.map((row) => {
           const session = row.payload as PlexSessionItem;
-          const sessionId = session.Session?.id;
-          const isActive = sessionId ? activeSessionIds.has(sessionId) : false;
+          const isActive = activeSessionRecordIds.has(row.source_record_id);
 
           return normalizeSessionItem(
             session,

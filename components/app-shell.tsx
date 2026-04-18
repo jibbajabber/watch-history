@@ -1,8 +1,9 @@
 import Link from "next/link";
+import type { Route } from "next";
 import { getSourceHealthNotice } from "@/lib/sources";
 import type { AppSection, TimelineView } from "@/lib/types";
 
-const views: Array<{ href: string; label: string; view: AppSection }> = [
+const views: Array<{ href: Route; label: string; view: AppSection }> = [
   { href: "/week", label: "Week", view: "week" },
   { href: "/month", label: "Month", view: "month" },
   { href: "/year", label: "Year", view: "year" },

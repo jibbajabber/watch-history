@@ -1,4 +1,5 @@
 import { getAppTimezone } from "@/lib/app-config";
+import { buildVisibleWatchEventsCte, ensureWatchEventCurationSchema } from "@/lib/curation";
 import { query } from "@/lib/db";
 import type {
   AnalyticsImportSource,
@@ -92,7 +93,10 @@ function buildRankedItems<T extends { label: string; totalEvents: number; detail
 }
 
 export async function getAnalyticsData(): Promise<AnalyticsResponse> {
+  await ensureWatchEventCurationSchema();
+
   const timezone = escapeTimezone();
+  const visibleWatchEventsCte = buildVisibleWatchEventsCte();
 
   const [
     overviewResult,
@@ -107,24 +111,25 @@ export async function getAnalyticsData(): Promise<AnalyticsResponse> {
   ] = await Promise.all([
     query<OverviewRow>(
       `
+        WITH ${visibleWatchEventsCte}
         SELECT
-          (SELECT COUNT(*)::int FROM watch_events) AS total_watch_events,
+          (SELECT COUNT(*)::int FROM visible_watch_events) AS total_watch_events,
           (SELECT COUNT(*)::int FROM raw_import_records) AS total_raw_records,
           (SELECT COUNT(*)::int FROM import_jobs) AS total_import_jobs,
-          (SELECT COUNT(DISTINCT source_id)::int FROM watch_events) AS sources_with_history,
+          (SELECT COUNT(DISTINCT source_id)::int FROM visible_watch_events) AS sources_with_history,
           (
             SELECT COUNT(DISTINCT DATE(watched_at AT TIME ZONE '${timezone}'))::int
-            FROM watch_events
+            FROM visible_watch_events
             WHERE watched_at >= NOW() - INTERVAL '30 days'
           ) AS active_days_last_30,
           (
             SELECT COUNT(*)::int
-            FROM watch_events
+            FROM visible_watch_events
             WHERE created_at >= NOW() - INTERVAL '7 days'
           ) AS event_growth_last_7,
           (
             SELECT COUNT(*)::int
-            FROM watch_events
+            FROM visible_watch_events
             WHERE created_at >= NOW() - INTERVAL '30 days'
           ) AS event_growth_last_30,
           (
@@ -152,7 +157,8 @@ export async function getAnalyticsData(): Promise<AnalyticsResponse> {
     ),
     query<MonthlyActivityRow>(
       `
-        WITH months AS (
+        WITH ${visibleWatchEventsCte},
+        months AS (
           SELECT GENERATE_SERIES(
             DATE_TRUNC('month', NOW() AT TIME ZONE '${timezone}') - INTERVAL '11 months',
             DATE_TRUNC('month', NOW() AT TIME ZONE '${timezone}'),
@@ -164,7 +170,7 @@ export async function getAnalyticsData(): Promise<AnalyticsResponse> {
           COUNT(w.id)::int AS event_count,
           COUNT(DISTINCT DATE(w.watched_at AT TIME ZONE '${timezone}'))::int AS active_days
         FROM months
-        LEFT JOIN watch_events w
+        LEFT JOIN visible_watch_events w
           ON DATE_TRUNC('month', w.watched_at AT TIME ZONE '${timezone}') = month_start
         GROUP BY month_start
         ORDER BY month_start
@@ -172,11 +178,12 @@ export async function getAnalyticsData(): Promise<AnalyticsResponse> {
     ),
     query<TopTitleRow>(
       `
+        WITH ${visibleWatchEventsCte}
         SELECT
           title,
           COUNT(*)::int AS total_events,
           COALESCE(SUM(duration_minutes), 0)::int AS total_duration_minutes
-        FROM watch_events
+        FROM visible_watch_events
         GROUP BY title
         ORDER BY total_events DESC, total_duration_minutes DESC, title ASC
         LIMIT 5
@@ -184,11 +191,12 @@ export async function getAnalyticsData(): Promise<AnalyticsResponse> {
     ),
     query<TopSourceRow>(
       `
+        WITH ${visibleWatchEventsCte}
         SELECT
           source_name,
           COUNT(*)::int AS total_events,
           COALESCE(SUM(duration_minutes), 0)::int AS total_duration_minutes
-        FROM watch_events
+        FROM visible_watch_events
         GROUP BY source_name
         ORDER BY total_events DESC, total_duration_minutes DESC, source_name ASC
         LIMIT 5
@@ -196,7 +204,8 @@ export async function getAnalyticsData(): Promise<AnalyticsResponse> {
     ),
     query<MonthlyCreatedRow>(
       `
-        WITH months AS (
+        WITH ${visibleWatchEventsCte},
+        months AS (
           SELECT GENERATE_SERIES(
             DATE_TRUNC('month', NOW() AT TIME ZONE '${timezone}') - INTERVAL '11 months',
             DATE_TRUNC('month', NOW() AT TIME ZONE '${timezone}'),
@@ -214,7 +223,7 @@ export async function getAnalyticsData(): Promise<AnalyticsResponse> {
           SELECT
             DATE_TRUNC('month', created_at AT TIME ZONE '${timezone}') AS month_start,
             COUNT(*)::int AS watch_events
-          FROM watch_events
+          FROM visible_watch_events
           GROUP BY 1
         )
         SELECT
@@ -229,11 +238,12 @@ export async function getAnalyticsData(): Promise<AnalyticsResponse> {
     ),
     query<SourceContributionRow>(
       `
-        WITH watch_counts AS (
+        WITH ${visibleWatchEventsCte},
+        watch_counts AS (
           SELECT
             source_id,
             COUNT(*)::int AS watch_events
-          FROM watch_events
+          FROM visible_watch_events
           GROUP BY source_id
         ),
         raw_counts AS (
@@ -285,10 +295,11 @@ export async function getAnalyticsData(): Promise<AnalyticsResponse> {
     ),
     query<RangeRow>(
       `
+        WITH ${visibleWatchEventsCte}
         SELECT
           MIN(watched_at)::text AS earliest_at,
           MAX(watched_at)::text AS latest_at
-        FROM watch_events
+        FROM visible_watch_events
       `
     ),
     query<RangeRow>(

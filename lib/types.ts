@@ -1,8 +1,11 @@
 export type TimelineView = "week" | "month" | "year";
-export type AppSection = TimelineView | "analytics" | "sources";
+export type AppSection = TimelineView | "analytics" | "sources" | "favourites";
+export type CuratedFilter = "all" | "favourites" | "hidden";
 
 export type TimelineEvent = {
   id: string;
+  sourceId: string;
+  eventKey: string;
   title: string;
   mediaType: string | null;
   sourceName: string;
@@ -11,10 +14,13 @@ export type TimelineEvent = {
   channelLogoPath: string | null;
   deviceLabel: string | null;
   watchedAt: string;
+  watchedAtLabel: string;
   durationMinutes: number | null;
   progressLabel: string | null;
   statusLabel: string | null;
   isProvisional: boolean;
+  isFavourite: boolean;
+  isHidden: boolean;
 };
 
 export type TimelineGroup = {
@@ -55,6 +61,16 @@ export type TimelineResponse = {
   highlights: TimelineHighlight[];
   meta: {
     groupLabel: string;
+  };
+};
+
+export type FavouritesResponse = {
+  filter: CuratedFilter;
+  items: TimelineEvent[];
+  summary: {
+    curatedItems: number;
+    favourites: number;
+    hidden: number;
   };
 };
 

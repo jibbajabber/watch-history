@@ -190,9 +190,10 @@ For new feature work, use this default sequence unless the user explicitly redir
    Update the `Current Structure` section whenever those changes materially affect how a contributor should understand or navigate the repo.
    Planned or draft follow-up features should remain explicitly marked as planned rather than being added to completed feature lists.
 9. Update `AGENTS.md` and other relevant docs to record the feature as complete.
-10. When the feature is complete, ask whether the user wants the branch pushed.
-11. Ask whether the user wants a PR raised.
-12. If a PR is raised, use a Title Case title derived from the feature name or branch name with hyphens replaced by spaces, and write a short description summarizing what the feature achieves.
+10. Prepare a concise summary of the completed change that can be used directly or adapted into a commit message when the user is ready to commit.
+11. When the feature is complete, ask whether the user wants the branch pushed.
+12. Ask whether the user wants a PR raised.
+13. If a PR is raised, use a Title Case title derived from the feature name or branch name with hyphens replaced by spaces, and write a short description summarizing what the feature achieves.
 
 ## Decision Log
 
@@ -247,15 +248,18 @@ Use this section to record decisions as they are made.
 | 2026-04-18 | Feature 12 is complete with a dedicated analytics tab. | `/analytics` now exposes real-data overview totals, monthly watch and dataset trends, source contribution, and recent import activity using only stored `watch_events`, `raw_import_records`, `import_jobs`, and `sources` data. |
 | 2026-04-18 | Feature 13 should add favourites and recommendation curation on top of timeline history. | The product needs a user-owned curation layer so meaningful content can be favourited, recommended, or hidden without destroying source-truth imports. |
 | 2026-04-18 | Feature 14 should establish a container-first automated testing workflow with TDD guidance. | Tests should run through the Docker-managed environment, update contributor workflow expectations, and leave a clear decision on whether GitHub Actions is included here or split into Feature 15. |
-| 2026-04-18 | Resume-default scope for Feature 13 is event-level curation with reversible hiding. | Unless the user redirects, favourites/recommendations attach to `watch_events`, hidden items are suppressed rather than deleted, and hidden items should be excluded from default timeline and analytics views. |
+| 2026-04-18 | Resume-default scope for Feature 13 is event-level curation with reversible hiding. | Unless the user redirects, curation attaches to `watch_events`, hidden items are suppressed rather than deleted, and hidden items should be excluded from default timeline and analytics views. |
+| 2026-04-18 | Feature 13 v1 should ship as watch-event curation plus a dedicated `/favourites` route. | Use a narrow `watch_event_curation` model, keep imports unchanged, add a visible desktop action trigger alongside touch long-press, and make hidden items recoverable from the curated view. |
+| 2026-04-18 | Feature 13 should store only a single favourite flag in v1. | `Favourites` remains the destination name; recommendation wording can appear in supporting UI copy or actions, but it should not be a separate persisted state. |
+| 2026-04-18 | Feature 13 stores curation by source plus stable event key so it survives import rebuilds. | Current Home Assistant and Plex imports rebuild `watch_events`, so favourites and hidden-item state join by durable source/event identity rather than a transient row id. |
+| 2026-04-18 | Feature 13 is complete with a dedicated `/favourites` route and timeline curation controls. | Timeline rows now support favourite and hide actions with a visible desktop trigger and touch long-press, hidden items drop out of default timeline and analytics views, and `/favourites` can recover hidden entries. |
 | 2026-04-18 | Resume-default scope for Feature 14 is Docker-first local testing with CI deferred. | Unless the user redirects, the first testing milestone should use `vitest`, target logic-heavy server-side code first, and leave GitHub Actions for Feature 15. |
 
 ## Next Discovery Steps
 
-1. Pick up Feature 13 implementation using the documented resume defaults unless the user redirects.
-2. After Feature 13, pick up Feature 14 implementation with Docker-first local testing and GitHub Actions deferred to Feature 15 unless the user redirects.
-3. Decide whether day-of-week patterns and streak-style metrics belong in a Feature 12 follow-up pass or a later feature.
-4. Preserve the completed Home Assistant, Plex, and retention behavior as analytics and later features land.
+1. Pick up Feature 14 implementation with Docker-first local testing and GitHub Actions deferred to Feature 15 unless the user redirects.
+2. Decide whether day-of-week patterns and streak-style metrics belong in a Feature 12 follow-up pass or a later feature.
+3. Preserve the completed Home Assistant, Plex, retention, and favourites behavior as analytics and later features land.
 
 ## Feature Progress
 
@@ -283,7 +287,7 @@ Use this section to record decisions as they are made.
   Source data-retention controls are implemented with per-source YAML settings, `/sources` editing, worker-driven cleanup, durable-history cleanup, and Plex provisional retention handling.
 - Feature 12: Complete
   A dedicated analytics tab is implemented with overview totals, watch-pattern trends, dataset growth, source contribution, and recent import activity from real stored data.
-- Feature 13: Planned
-  A curation layer should let the user favourite, recommend, and hide timeline items, with a dedicated `Favourites` tab built on top of imported history.
+- Feature 13: Complete
+  A curation layer now lets the user favourite and hide individual timeline items, uses recommendation-oriented language in the curated experience, excludes hidden items from default timeline and analytics views, and recovers curated entries from a dedicated `/favourites` tab built on top of imported history.
 - Feature 14: Planned
   The repository should adopt a container-first automated testing workflow with documented TDD expectations and a clear CI/GitHub Actions decision.

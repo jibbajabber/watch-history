@@ -2,12 +2,13 @@ import Link from "next/link";
 import { getSourceHealthNotice } from "@/lib/sources";
 import type { AppSection, TimelineView } from "@/lib/types";
 
-type AppShellHref = `/${TimelineView}` | "/analytics" | "/sources";
+type AppShellHref = `/${TimelineView}` | "/analytics" | "/sources" | "/favourites";
 
 const views: Array<{ href: AppShellHref; label: string; view: AppSection }> = [
   { href: "/week", label: "Week", view: "week" },
   { href: "/month", label: "Month", view: "month" },
   { href: "/year", label: "Year", view: "year" },
+  { href: "/favourites", label: "Favourites", view: "favourites" },
   { href: "/analytics", label: "Analytics", view: "analytics" },
   { href: "/sources", label: "Sources", view: "sources" }
 ];
@@ -39,6 +40,11 @@ const sectionCards: Record<
     eyebrow: "This section",
     title: "Patterns, growth, and import momentum.",
     body: "Use Analytics to read the full dataset: long-range watch habits, source contribution, import activity, and how the stored history is growing."
+  },
+  favourites: {
+    eyebrow: "This section",
+    title: "What was worth keeping and recommending.",
+    body: "Use Favourites to keep the titles that mattered, revisit what you would recommend later, and recover items hidden from the default timeline."
   },
   sources: {
     eyebrow: "This section",
@@ -111,7 +117,7 @@ export async function AppShell({
                       }}
                       >
                       A timeline-first watch journal for the last week, the shape of a month,
-                      the rhythm of a year, and the patterns building underneath it.
+                      the rhythm of a year, the favourites worth recommending again, and the patterns building underneath it.
                     </p>
                   </div>
                 </div>

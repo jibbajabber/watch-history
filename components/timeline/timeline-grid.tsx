@@ -1,11 +1,9 @@
-import { ChannelLogo } from "@/components/timeline/channel-logo";
+import { TimelineEventCard } from "@/components/timeline/event-card";
 import type { TimelineResponse } from "@/lib/types";
 import { formatEventDateTime } from "@/lib/format";
 
 export function TimelineGrid({ data }: { data: TimelineResponse }) {
   const topGroupTotal = data.groups[0]?.totalEvents ?? 1;
-  const formatDeviceLabel = (label: string) =>
-    label.replace("media_player.", "").replaceAll("_", " ");
 
   return (
     <section
@@ -39,102 +37,7 @@ export function TimelineGrid({ data }: { data: TimelineResponse }) {
 
         <div style={{ display: "grid" }}>
           {data.events.map((event) => (
-            <article
-              key={event.id}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "minmax(0, 1fr) auto",
-                gap: "18px",
-                padding: "18px 24px",
-                borderBottom: "1px solid var(--line)"
-              }}
-            >
-              <div style={{ display: "grid", gap: "8px" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    flexWrap: "wrap",
-                    alignItems: "center"
-                  }}
-                >
-                  <strong style={{ fontSize: "1.08rem" }}>{event.title}</strong>
-                  {event.statusLabel ? (
-                    <span
-                      style={{
-                        borderRadius: "999px",
-                        border: event.isProvisional
-                          ? "1px solid rgba(255, 191, 105, 0.42)"
-                          : "1px solid var(--line)",
-                        background: event.isProvisional
-                          ? "rgba(255, 191, 105, 0.14)"
-                          : "rgba(255,255,255,0.04)",
-                        color: event.isProvisional ? "var(--gold)" : "var(--muted)",
-                        padding: "4px 10px",
-                        fontSize: "0.78rem",
-                        fontWeight: 700
-                      }}
-                    >
-                      {event.statusLabel}
-                    </span>
-                  ) : null}
-                  {event.mediaType ? (
-                    <span
-                      style={{
-                        borderRadius: "999px",
-                        border: "1px solid var(--line)",
-                        padding: "4px 10px",
-                        fontSize: "0.78rem",
-                        color: "var(--muted)"
-                      }}
-                    >
-                      {event.mediaType}
-                    </span>
-                  ) : null}
-                </div>
-
-                <div
-                  className="muted"
-                  style={{
-                    display: "flex",
-                    gap: "14px",
-                    flexWrap: "wrap",
-                    fontSize: "0.92rem"
-                  }}
-                >
-                  {event.channelName ? (
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "8px"
-                      }}
-                    >
-                      {event.channelLogoPath ? (
-                        <ChannelLogo label={event.channelName} logoPath={event.channelLogoPath} />
-                      ) : null}
-                      <span>{event.channelName}</span>
-                    </span>
-                  ) : (
-                    <span>{event.sourceName}</span>
-                  )}
-                  {event.deviceLabel ? <span>{formatDeviceLabel(event.deviceLabel)}</span> : null}
-                  {event.progressLabel ? <span>{event.progressLabel}</span> : null}
-                  {event.durationMinutes ? <span>{event.durationMinutes} min</span> : null}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  textAlign: "right",
-                  display: "grid",
-                  gap: "6px",
-                  alignContent: "start"
-                }}
-              >
-                <strong style={{ fontSize: "0.92rem" }}>{formatEventDateTime(event.watchedAt)}</strong>
-              </div>
-            </article>
+            <TimelineEventCard key={`${event.sourceId}-${event.eventKey}`} event={event} />
           ))}
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { getAppTimezone } from "@/lib/app-config";
 import { findChannelBrand } from "@/lib/channels";
+import { buildVisibleWatchEventsCte, ensureWatchEventCurationSchema } from "@/lib/curation";
 import { query } from "@/lib/db";
 import { formatEventDateTime, formatMinutes } from "@/lib/format";
 import type {
@@ -15,6 +16,8 @@ import type {
 
 type EventRow = {
   id: string;
+  source_id: string;
+  event_key: string;
   title: string;
   media_type: string | null;
   source_name: string;
@@ -26,6 +29,8 @@ type EventRow = {
   progress_label: string | null;
   status_label: string | null;
   is_provisional: boolean;
+  is_favourite: boolean;
+  is_hidden: boolean;
 };
 
 type GroupRow = {
@@ -124,14 +129,20 @@ export function getTimelineViewMeta(view: TimelineView) {
 }
 
 export async function getTimelineViewData(view: TimelineView): Promise<TimelineResponse> {
+  await ensureWatchEventCurationSchema();
+
   const window = getViewWindow(view);
+  const visibleWatchEventsCte = buildVisibleWatchEventsCte();
 
   const [eventsResult, groupsResult, summaryResult, titleHighlightResult, sourceMixResult] =
     await Promise.all([
     query<EventRow>(
       `
+        WITH ${visibleWatchEventsCte}
         SELECT
           id,
+          source_id,
+          event_key,
           title,
           media_type,
           source_name,
@@ -142,8 +153,10 @@ export async function getTimelineViewData(view: TimelineView): Promise<TimelineR
           duration_minutes,
           metadata->>'progress_label' AS progress_label,
           metadata->>'status_label' AS status_label,
-          COALESCE((metadata->>'is_provisional')::boolean, false) AS is_provisional
-        FROM watch_events
+          COALESCE((metadata->>'is_provisional')::boolean, false) AS is_provisional,
+          is_favourite,
+          is_hidden
+        FROM visible_watch_events
         WHERE watched_at >= ${window.intervalSql}
         ORDER BY watched_at DESC
         LIMIT 200
@@ -151,12 +164,13 @@ export async function getTimelineViewData(view: TimelineView): Promise<TimelineR
     ),
     query<GroupRow>(
       `
+        WITH ${visibleWatchEventsCte}
         SELECT
           ${window.groupByExpression} AS label,
           COUNT(*)::int AS total_events,
           COALESCE(SUM(duration_minutes), 0)::int AS total_duration_minutes,
           MAX(watched_at)::text AS latest_watched_at
-        FROM watch_events
+        FROM visible_watch_events
         WHERE watched_at >= ${window.intervalSql}
         GROUP BY ${window.groupByExpression}, ${window.groupSortExpression}
         ORDER BY ${window.groupSortExpression} DESC
@@ -164,23 +178,25 @@ export async function getTimelineViewData(view: TimelineView): Promise<TimelineR
     ),
     query<SummaryRow>(
       `
+        WITH ${visibleWatchEventsCte}
         SELECT
           COUNT(*)::int AS total_events,
           COUNT(DISTINCT title)::int AS unique_titles,
           COUNT(DISTINCT source_id)::int AS sources,
           COALESCE(SUM(duration_minutes), 0)::int AS total_duration_minutes,
           COUNT(DISTINCT DATE(watched_at AT TIME ZONE '${getAppTimezone().replace(/'/g, "''")}'))::int AS active_days
-        FROM watch_events
+        FROM visible_watch_events
         WHERE watched_at >= ${window.intervalSql}
       `
     ),
     query<HighlightRow>(
       `
+        WITH ${visibleWatchEventsCte}
         SELECT
           title,
           COUNT(*)::int AS total_events,
           COALESCE(SUM(duration_minutes), 0)::int AS total_duration_minutes
-        FROM watch_events
+        FROM visible_watch_events
         WHERE watched_at >= ${window.intervalSql}
         GROUP BY title
         ORDER BY total_events DESC, total_duration_minutes DESC, title ASC
@@ -189,10 +205,11 @@ export async function getTimelineViewData(view: TimelineView): Promise<TimelineR
     ),
     query<SourceMixRow>(
       `
+        WITH ${visibleWatchEventsCte}
         SELECT
           source_name,
           COUNT(*)::int AS total_events
-        FROM watch_events
+        FROM visible_watch_events
         WHERE watched_at >= ${window.intervalSql}
         GROUP BY source_name
         ORDER BY total_events DESC, source_name ASC
@@ -209,6 +226,8 @@ export async function getTimelineViewData(view: TimelineView): Promise<TimelineR
 
     return {
       id: row.id,
+      sourceId: row.source_id,
+      eventKey: row.event_key,
       title: row.title,
       mediaType: row.media_type,
       sourceName: row.source_name,
@@ -217,10 +236,13 @@ export async function getTimelineViewData(view: TimelineView): Promise<TimelineR
       channelLogoPath: brand?.logoPath ?? null,
       deviceLabel: row.device_label,
       watchedAt: row.watched_at,
+      watchedAtLabel: formatEventDateTime(row.watched_at),
       durationMinutes: row.duration_minutes,
       progressLabel: row.progress_label,
       statusLabel: row.status_label,
-      isProvisional: row.is_provisional
+      isProvisional: row.is_provisional,
+      isFavourite: row.is_favourite,
+      isHidden: row.is_hidden
     };
   });
 

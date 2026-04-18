@@ -54,6 +54,7 @@ When starting or advancing a feature in this repository:
 - When raising a PR from a feature branch, derive the title from the feature name or branch name by replacing hyphens with spaces and capitalizing each word.
 - Keep the PR description simple and outcome-focused, summarizing what the feature achieves rather than reproducing the full implementation detail.
 - Before closing out a feature, review `README.md` and mark the feature complete there if appropriate, along with any relevant file-purpose or workflow updates.
+- When adding future features to status sections in `README.md`, `AGENTS.md`, or related planning docs, list them under a planned or upcoming section until implementation is actually complete; do not place drafted or proposed features in completed sections just because a spec exists.
 - If implementation or verification would require starting a stopped local Docker Compose stack, ask the user before doing that because the source of truth may currently be a remote Docker deployment.
 
 ## Engineering Standards
@@ -183,6 +184,7 @@ For new feature work, use this default sequence unless the user explicitly redir
 6. Before starting a stopped local Docker Compose stack for implementation or verification, ask the user whether they want that local stack started.
 7. Implement, verify, and document the feature.
 8. Review `README.md` at feature close-out and update it where needed to mark the feature complete and document any new files, changed responsibilities, or workflow changes.
+   Planned or draft follow-up features should remain explicitly marked as planned rather than being added to completed feature lists.
 9. Update `AGENTS.md` and other relevant docs to record the feature as complete.
 10. When the feature is complete, ask whether the user wants the branch pushed.
 11. Ask whether the user wants a PR raised.
@@ -231,12 +233,15 @@ Use this section to record decisions as they are made.
 | 2026-04-18 | Feature close-out must include a README review. | Mark completed features in `README.md` where relevant and document any new files, responsibilities, or workflow expectations introduced by the feature. |
 | 2026-04-18 | Feature 10 should rebuild Plex watch events from persisted raw history rows while treating active sessions as provisional. | Durable Plex history should no longer depend only on the latest fetch; current `/status/sessions` entries remain useful but must be shown as in-progress snapshots rather than final history. |
 | 2026-04-18 | Feature 10 should replace `/sources` planning-oriented copy with operational summaries. | Source cards should emphasize health, freshness, sync cadence, and import state instead of internal next-step messaging. |
+| 2026-04-18 | Feature 10 should keep provisional Plex sessions until durable history replaces them. | Hardcoded expiry for pending Plex sessions is deferred; broader cleanup and retention policy belongs in feature 11. |
+| 2026-04-18 | Feature 11 should define per-source data-retention controls. | Retention should cover raw records, normalized watch events, and source-specific provisional data rather than only Plex pending sessions. |
+| 2026-04-18 | Feature 12 should add a dedicated analytics tab. | Analytics should cover both watch behavior and dataset growth using only real stored data. |
 
 ## Next Discovery Steps
 
-1. Confirm which source or enrichment priority should follow the completed Plex continuity and `/sources` polish work.
-2. Preserve the completed Home Assistant and Plex raw-record continuity behavior as future imports evolve.
-3. Decide whether the next milestone should deepen Plex metadata further or add the next source.
+1. Flesh out feature 11 for per-source retention controls, including general source history retention and source-specific provisional cleanup.
+2. Flesh out feature 12 for an analytics tab covering watch behavior and dataset growth over time.
+3. Preserve the completed Home Assistant and Plex raw-record continuity behavior as future imports evolve.
 
 ## Feature Progress
 
@@ -260,3 +265,7 @@ Use this section to record decisions as they are made.
   Home Assistant imports now rebuild from persisted raw records so long same-channel Sky Q viewing preserves programme history across repeated imports.
 - Feature 10: Complete
   Plex imports now rebuild durable watch events from persisted raw history rows, provisional active sessions are shown as in-progress timeline entries, and `/sources` now emphasizes operational summaries over internal next-step copy.
+- Feature 11: Planned
+  Source data-retention controls need to cover general source history retention, raw-record cleanup, normalized-event cleanup, and source-specific provisional data behavior.
+- Feature 12: Planned
+  A dedicated analytics tab should surface watch patterns, source contribution, and dataset growth from real stored data.

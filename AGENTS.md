@@ -229,12 +229,14 @@ Use this section to record decisions as they are made.
 | 2026-04-18 | Agents must ask before starting a stopped local Docker Compose stack. | The canonical deployment definition is the repo `docker-compose.yml`, but the active application may be running on a remote Docker host that the user must interact with directly. |
 | 2026-04-18 | PRs should use a feature-name-derived Title Case title and a short achievement-focused description. | Replace hyphens with spaces in the feature or branch name, capitalize each word, and keep the body concise. |
 | 2026-04-18 | Feature close-out must include a README review. | Mark completed features in `README.md` where relevant and document any new files, responsibilities, or workflow expectations introduced by the feature. |
+| 2026-04-18 | Feature 10 should rebuild Plex watch events from persisted raw history rows while treating active sessions as provisional. | Durable Plex history should no longer depend only on the latest fetch; current `/status/sessions` entries remain useful but must be shown as in-progress snapshots rather than final history. |
+| 2026-04-18 | Feature 10 should replace `/sources` planning-oriented copy with operational summaries. | Source cards should emphasize health, freshness, sync cadence, and import state instead of internal next-step messaging. |
 
 ## Next Discovery Steps
 
-1. Start feature 10 for Plex enrichment and `/sources` page polish.
-2. Preserve the completed Home Assistant continuity behavior while improving Plex detail and simplifying `/sources`.
-3. Confirm whether any source priorities should follow Plex after feature 10.
+1. Confirm which source or enrichment priority should follow the completed Plex continuity and `/sources` polish work.
+2. Preserve the completed Home Assistant and Plex raw-record continuity behavior as future imports evolve.
+3. Decide whether the next milestone should deepen Plex metadata further or add the next source.
 
 ## Feature Progress
 
@@ -256,5 +258,5 @@ Use this section to record decisions as they are made.
   Import reliability, source-health status, safe manual failure handling, worker resilience, and shared warning-banner behavior are implemented.
 - Feature 9: Complete
   Home Assistant imports now rebuild from persisted raw records so long same-channel Sky Q viewing preserves programme history across repeated imports.
-- Feature 10: Planned
-  Plex enrichment and `/sources` UI polish need to be implemented after the completed Sky Q continuity work.
+- Feature 10: Complete
+  Plex imports now rebuild durable watch events from persisted raw history rows, provisional active sessions are shown as in-progress timeline entries, and `/sources` now emphasizes operational summaries over internal next-step copy.

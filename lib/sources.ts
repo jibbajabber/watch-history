@@ -155,7 +155,6 @@ type HomeAssistantDerivedStatus = Omit<
   | "slug"
   | "displayName"
   | "kindLabel"
-  | "description"
   | "healthLabel"
   | "healthDetail"
   | "lastSuccessLabel"
@@ -188,8 +187,8 @@ function getHomeAssistantStatus(
       statusLabel: "Failing",
       envReady,
       connectionPathLabel: connectionOk ? "Verified" : "Unavailable",
-      nextStepTitle: "Import health needs attention.",
-      nextStepBody:
+      operationalTitle: "Latest import failed",
+      operationalBody:
         connectionOk
           ? "Connectivity is working, but the latest Home Assistant import failed. The app should keep running and scheduled sync will retry at the next interval."
           : "The latest Home Assistant import failed and the current connectivity check is also failing. The app should keep running and scheduled sync will retry at the next interval."
@@ -202,8 +201,8 @@ function getHomeAssistantStatus(
       statusLabel: "Stale",
       envReady,
       connectionPathLabel: "Verified",
-      nextStepTitle: "Import freshness needs attention.",
-      nextStepBody:
+      operationalTitle: "Import freshness is behind",
+      operationalBody:
         "Home Assistant is connected, but recent imports are older than expected for the configured sync interval."
     };
   }
@@ -214,9 +213,9 @@ function getHomeAssistantStatus(
       statusLabel: "Imported",
       envReady,
       connectionPathLabel: "Verified",
-      nextStepTitle: "Expand from connectivity into entity-history imports.",
-      nextStepBody:
-        "Home Assistant data has already landed. The next work should focus on Sky Q entity history ingestion, idempotent re-imports, and source-specific normalization."
+      operationalTitle: "Source is importing normally",
+      operationalBody:
+        "Home Assistant data has landed and the source is ready for manual or scheduled refreshes."
     };
   }
 
@@ -226,9 +225,9 @@ function getHomeAssistantStatus(
       statusLabel: "Connected",
       envReady,
       connectionPathLabel: "Access token",
-      nextStepTitle: "Start Sky Q history ingestion.",
-      nextStepBody:
-        "Home Assistant connectivity is working. The next step is to query history for the configured Sky Q media-player entities and store the raw records."
+      operationalTitle: "Ready for the first import",
+      operationalBody:
+        "Connectivity is working and the configured entities are ready to import."
     };
   }
 
@@ -238,9 +237,9 @@ function getHomeAssistantStatus(
       statusLabel: "Ready to verify",
       envReady,
       connectionPathLabel: "Access token",
-      nextStepTitle: "Resolve connectivity or entity checks.",
-      nextStepBody:
-        "The config file and token are present. The next step is to make the Home Assistant connectivity check pass and confirm the configured Sky Q entities exist."
+      operationalTitle: "Connection needs verification",
+      operationalBody:
+        "The config file and token are present, but the connectivity check still needs to pass."
     };
   }
 
@@ -249,8 +248,8 @@ function getHomeAssistantStatus(
     statusLabel: "Configuration required",
     envReady,
     connectionPathLabel: "Unknown",
-    nextStepTitle: "Configure the Home Assistant source.",
-    nextStepBody:
+    operationalTitle: "Configuration is incomplete",
+    operationalBody:
       "Create the Home Assistant YAML config file with the base URL and tracked entities, then add a long-lived access token in the env file."
   };
 }
@@ -270,8 +269,8 @@ function getPlexStatus(
       statusLabel: "Failing",
       envReady,
       connectionPathLabel: connectionOk ? "Verified" : "Unavailable",
-      nextStepTitle: "Import health needs attention.",
-      nextStepBody:
+      operationalTitle: "Latest import failed",
+      operationalBody:
         connectionOk
           ? "Connectivity is working, but the latest Plex import failed. The app should keep running and scheduled sync will retry at the next interval."
           : "The latest Plex import failed and the current connectivity check is also failing. The app should keep running and scheduled sync will retry at the next interval."
@@ -284,8 +283,8 @@ function getPlexStatus(
       statusLabel: "Stale",
       envReady,
       connectionPathLabel: "Verified",
-      nextStepTitle: "Import freshness needs attention.",
-      nextStepBody:
+      operationalTitle: "Import freshness is behind",
+      operationalBody:
         "Plex is connected, but recent imports are older than expected for the configured sync interval."
     };
   }
@@ -296,9 +295,9 @@ function getPlexStatus(
       statusLabel: "Imported",
       envReady,
       connectionPathLabel: "Verified",
-      nextStepTitle: "Expand from connectivity into repeat Plex imports.",
-      nextStepBody:
-        "Plex watch history has already landed. The next work should refine normalization and any later enrichment without changing the v1 history import path."
+      operationalTitle: "Source is importing normally",
+      operationalBody:
+        "Plex history is landing and the source is ready for manual or scheduled refreshes."
     };
   }
 
@@ -308,9 +307,9 @@ function getPlexStatus(
       statusLabel: "Connected",
       envReady,
       connectionPathLabel: "Server token",
-      nextStepTitle: "Start Plex history ingestion.",
-      nextStepBody:
-        "Plex connectivity is working. The next step is to import `/status/sessions/history/all` and store the raw history rows."
+      operationalTitle: "Ready for the first import",
+      operationalBody:
+        "Connectivity is working and the Plex server is ready to import."
     };
   }
 
@@ -320,9 +319,9 @@ function getPlexStatus(
       statusLabel: "Ready to verify",
       envReady,
       connectionPathLabel: "Server token",
-      nextStepTitle: "Resolve connectivity checks.",
-      nextStepBody:
-        "The Plex env vars are present. The next step is to verify the server URL and token by calling the Plex history endpoint."
+      operationalTitle: "Connection needs verification",
+      operationalBody:
+        "The Plex env vars are present, but the server URL and token still need to pass the connectivity check."
     };
   }
 
@@ -331,8 +330,8 @@ function getPlexStatus(
     statusLabel: "Configuration required",
     envReady,
     connectionPathLabel: "Unknown",
-    nextStepTitle: "Configure the Plex source.",
-    nextStepBody:
+    operationalTitle: "Configuration is incomplete",
+    operationalBody:
       "Set PLEX_BASE_URL and PLEX_TOKEN in the env file so the app can authenticate to the Plex Media Server."
   };
 }
@@ -539,7 +538,6 @@ export async function getSourceStatuses(): Promise<SourceStatus[]> {
       slug: registrySource.slug,
       displayName: source?.display_name ?? registrySource.displayName,
       kindLabel: registrySource.kindLabel,
-      description: registrySource.description,
       expectedEnvVars: [...registrySource.expectedEnvVars],
       latestImportLabel: latestImport
         ? `${formatLatestImport(latestImport.latest_started_at ?? latestImportAt)} (${latestImport.latest_status})`

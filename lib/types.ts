@@ -12,6 +12,9 @@ export type TimelineEvent = {
   deviceLabel: string | null;
   watchedAt: string;
   durationMinutes: number | null;
+  progressLabel: string | null;
+  statusLabel: string | null;
+  isProvisional: boolean;
 };
 
 export type TimelineGroup = {
@@ -65,14 +68,13 @@ export type SourceStatus = {
   slug: string;
   displayName: string;
   kindLabel: string;
-  description: string;
   status: "ready" | "attention" | "blocked";
   statusLabel: string;
   envReady: boolean;
   connectionPathLabel: string;
   latestImportLabel: string;
-  nextStepTitle: string;
-  nextStepBody: string;
+  operationalTitle: string;
+  operationalBody: string;
   healthLabel: string;
   healthDetail: string;
   lastSuccessLabel: string;

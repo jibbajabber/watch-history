@@ -13,6 +13,12 @@ type RawRecordRow = {
   id: string;
 };
 
+type PersistedPlexRawRow = {
+  id: string;
+  source_record_id: string;
+  payload: PlexHistoryItem | PlexSessionItem;
+};
+
 type ImportStatus = "pending" | "running" | "completed" | "failed";
 
 type PlexHistoryItem = {
@@ -62,9 +68,11 @@ type PlexSessionItem = {
 };
 
 type NormalizedPlexWatch = {
+  rawImportRecordId: string | null;
   title: string;
   mediaType: string | null;
   watchedAt: string;
+  durationMinutes: number | null;
   metadata: Record<string, unknown>;
 };
 
@@ -84,15 +92,37 @@ function buildNormalizedTitle(item: PlexHistoryItem) {
   return item.title?.trim() || item.grandparentTitle?.trim() || item.ratingKey || "Unknown Plex item";
 }
 
-function normalizeHistoryItem(item: PlexHistoryItem): NormalizedPlexWatch | null {
+function formatProgressLabel(viewOffsetMs: number | null, durationMs: number | null) {
+  if (
+    typeof viewOffsetMs !== "number" ||
+    typeof durationMs !== "number" ||
+    viewOffsetMs <= 0 ||
+    durationMs <= 0
+  ) {
+    return null;
+  }
+
+  const watchedMinutes = Math.max(1, Math.round(viewOffsetMs / 60000));
+  const totalMinutes = Math.max(1, Math.round(durationMs / 60000));
+  const percent = Math.max(1, Math.min(99, Math.round((viewOffsetMs / durationMs) * 100)));
+
+  return `${watchedMinutes} of ${totalMinutes} min (${percent}%)`;
+}
+
+function normalizeHistoryItem(
+  item: PlexHistoryItem,
+  rawImportRecordId: string | null = null
+): NormalizedPlexWatch | null {
   if (!item.historyKey || typeof item.viewedAt !== "number") {
     return null;
   }
 
   return {
+    rawImportRecordId,
     title: buildNormalizedTitle(item),
     mediaType: typeof item.type === "string" ? item.type : null,
     watchedAt: new Date(item.viewedAt * 1000).toISOString(),
+    durationMinutes: null,
     metadata: {
       history_key: item.historyKey,
       plex_key: item.key ?? null,
@@ -104,6 +134,7 @@ function normalizeHistoryItem(item: PlexHistoryItem): NormalizedPlexWatch | null
       grandparent_key: item.grandparentKey ?? null,
       grandparent_title: item.grandparentTitle ?? null,
       originally_available_at: item.originallyAvailableAt ?? null,
+      is_provisional: false,
       normalized_from: "plex_history",
       attributes: item
     }
@@ -112,7 +143,8 @@ function normalizeHistoryItem(item: PlexHistoryItem): NormalizedPlexWatch | null
 
 function normalizeSessionItem(
   item: PlexSessionItem,
-  importedAt: string
+  importedAt: string,
+  rawImportRecordId: string | null = null
 ): NormalizedPlexWatch | null {
   const sessionId = item.Session?.id;
 
@@ -121,9 +153,11 @@ function normalizeSessionItem(
   }
 
   return {
+    rawImportRecordId,
     title: buildNormalizedTitle(item),
     mediaType: typeof item.type === "string" ? item.type : null,
     watchedAt: importedAt,
+    durationMinutes: null,
     metadata: {
       session_id: sessionId,
       plex_key: item.key ?? null,
@@ -139,6 +173,9 @@ function normalizeSessionItem(
       parent_key: item.parentKey ?? null,
       grandparent_key: item.grandparentKey ?? null,
       grandparent_title: item.grandparentTitle ?? null,
+      progress_label: formatProgressLabel(item.viewOffset ?? null, item.duration ?? null),
+      status_label: "In progress",
+      is_provisional: true,
       normalized_from: "plex_session",
       attributes: item
     }
@@ -278,6 +315,67 @@ async function upsertRawSessionRecord(importJobId: string, sourceId: string, ite
   return result.rows[0].id;
 }
 
+async function clearStaleSessionRecords(sourceId: string, activeSessionIds: string[]) {
+  const currentSourceRecordIds = activeSessionIds.map((sessionId) => `session::${sessionId}`);
+
+  if (currentSourceRecordIds.length === 0) {
+    await query(
+      `
+        DELETE FROM raw_import_records
+        WHERE source_id = $1
+          AND source_record_id LIKE 'session::%'
+      `,
+      [sourceId]
+    );
+
+    return;
+  }
+
+  await query(
+    `
+      DELETE FROM raw_import_records
+      WHERE source_id = $1
+        AND source_record_id LIKE 'session::%'
+        AND NOT (source_record_id = ANY($2::text[]))
+    `,
+    [sourceId, currentSourceRecordIds]
+  );
+}
+
+async function loadPersistedHistoryRows(sourceId: string) {
+  const result = await query<PersistedPlexRawRow>(
+    `
+      SELECT id, source_record_id, payload
+      FROM raw_import_records
+      WHERE source_id = $1
+        AND source_record_id NOT LIKE 'session::%'
+      ORDER BY COALESCE(
+        (payload->>'viewedAt')::bigint,
+        0
+      ) ASC, source_record_id ASC
+    `,
+    [sourceId]
+  );
+
+  return result.rows;
+}
+
+async function loadCurrentSessionRows(sourceId: string, importJobId: string) {
+  const result = await query<PersistedPlexRawRow>(
+    `
+      SELECT id, source_record_id, payload
+      FROM raw_import_records
+      WHERE source_id = $1
+        AND import_job_id = $2
+        AND source_record_id LIKE 'session::%'
+      ORDER BY source_record_id ASC
+    `,
+    [sourceId, importJobId]
+  );
+
+  return result.rows;
+}
+
 async function replaceNormalizedWatchEvents(sourceId: string, items: NormalizedPlexWatch[]) {
   await query(
     `
@@ -294,6 +392,7 @@ async function replaceNormalizedWatchEvents(sourceId: string, items: NormalizedP
       `
         INSERT INTO watch_events (
           source_id,
+          raw_import_record_id,
           title,
           media_type,
           source_name,
@@ -301,15 +400,16 @@ async function replaceNormalizedWatchEvents(sourceId: string, items: NormalizedP
           duration_minutes,
           metadata
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
       `,
       [
         sourceId,
+        item.rawImportRecordId,
         item.title,
         item.mediaType,
         "Plex",
         item.watchedAt,
-        null,
+        item.durationMinutes,
         JSON.stringify(item.metadata)
       ]
     );
@@ -347,18 +447,27 @@ export async function runPlexImport() {
       ]);
       const history = historyPayload.MediaContainer?.Metadata ?? [];
       const sessions = sessionsPayload.MediaContainer?.Metadata ?? [];
-      const activeSessions = sessions.filter((session) =>
-        shouldIncludeActiveSession(session, history, importedAt)
-      );
-      const normalized = [
-        ...history.map(normalizeHistoryItem),
-        ...activeSessions.map((session) => normalizeSessionItem(session, importedAt))
-      ].filter((item) => item !== null);
+      await Promise.all(history.map((item) => upsertRawImportRecord(importJobId, sourceId, item)));
 
-      await Promise.all([
-        ...history.map((item) => upsertRawImportRecord(importJobId, sourceId, item)),
-        ...activeSessions.map((item) => upsertRawSessionRecord(importJobId, sourceId, item))
-      ]);
+      const persistedHistoryRows = await loadPersistedHistoryRows(sourceId);
+      const persistedHistory = persistedHistoryRows.map((row) => row.payload as PlexHistoryItem);
+      const activeSessions = sessions.filter((session) =>
+        shouldIncludeActiveSession(session, persistedHistory, importedAt)
+      );
+
+      await Promise.all(activeSessions.map((item) => upsertRawSessionRecord(importJobId, sourceId, item)));
+      await clearStaleSessionRecords(
+        sourceId,
+        activeSessions.map((session) => session.Session?.id).filter((sessionId): sessionId is string => Boolean(sessionId))
+      );
+
+      const currentSessionRows = await loadCurrentSessionRows(sourceId, importJobId);
+      const normalized = [
+        ...persistedHistoryRows.map((row) => normalizeHistoryItem(row.payload as PlexHistoryItem, row.id)),
+        ...currentSessionRows.map((row) =>
+          normalizeSessionItem(row.payload as PlexSessionItem, importedAt, row.id)
+        )
+      ].filter((item) => item !== null);
       const insertedCount = await replaceNormalizedWatchEvents(sourceId, normalized);
 
       await completeImportJob(importJobId, "completed", history.length + activeSessions.length, insertedCount);

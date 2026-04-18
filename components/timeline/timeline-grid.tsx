@@ -4,6 +4,8 @@ import { formatEventDateTime } from "@/lib/format";
 
 export function TimelineGrid({ data }: { data: TimelineResponse }) {
   const topGroupTotal = data.groups[0]?.totalEvents ?? 1;
+  const formatDeviceLabel = (label: string) =>
+    label.replace("media_player.", "").replaceAll("_", " ");
 
   return (
     <section
@@ -57,6 +59,25 @@ export function TimelineGrid({ data }: { data: TimelineResponse }) {
                   }}
                 >
                   <strong style={{ fontSize: "1.08rem" }}>{event.title}</strong>
+                  {event.statusLabel ? (
+                    <span
+                      style={{
+                        borderRadius: "999px",
+                        border: event.isProvisional
+                          ? "1px solid rgba(255, 191, 105, 0.42)"
+                          : "1px solid var(--line)",
+                        background: event.isProvisional
+                          ? "rgba(255, 191, 105, 0.14)"
+                          : "rgba(255,255,255,0.04)",
+                        color: event.isProvisional ? "var(--gold)" : "var(--muted)",
+                        padding: "4px 10px",
+                        fontSize: "0.78rem",
+                        fontWeight: 700
+                      }}
+                    >
+                      {event.statusLabel}
+                    </span>
+                  ) : null}
                   {event.mediaType ? (
                     <span
                       style={{
@@ -97,7 +118,8 @@ export function TimelineGrid({ data }: { data: TimelineResponse }) {
                   ) : (
                     <span>{event.sourceName}</span>
                   )}
-                  {event.deviceLabel ? <span>{event.deviceLabel.replace("media_player.", "").replaceAll("_", " ")}</span> : null}
+                  {event.deviceLabel ? <span>{formatDeviceLabel(event.deviceLabel)}</span> : null}
+                  {event.progressLabel ? <span>{event.progressLabel}</span> : null}
                   {event.durationMinutes ? <span>{event.durationMinutes} min</span> : null}
                 </div>
               </div>

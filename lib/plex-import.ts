@@ -11,6 +11,7 @@ type ImportJobRow = {
 
 type RawRecordRow = {
   id: string;
+  source_record_id: string;
 };
 
 type PersistedPlexRawRow = {
@@ -122,14 +123,8 @@ function buildSessionContentKey(item: PlexSessionItem) {
   ].join("::");
 }
 
-function makeSessionSourceRecordId(item: PlexSessionItem) {
-  const sessionId = item.Session?.id;
-
-  if (!sessionId) {
-    throw new Error("Plex session row is missing Session.id.");
-  }
-
-  return `session::${sessionId}::${buildSessionContentKey(item)}`;
+function makeSessionSourceRecordId(item: PlexSessionItem, importedAt: string) {
+  return `session::${buildSessionContentKey(item)}::${importedAt}`;
 }
 
 function normalizeHistoryItem(
@@ -313,7 +308,11 @@ async function upsertRawImportRecord(importJobId: string, sourceId: string, item
 }
 
 async function upsertRawSessionRecord(importJobId: string, sourceId: string, item: PlexSessionItem) {
-  const sourceRecordId = makeSessionSourceRecordId(item);
+  const sessionId = item.Session?.id;
+
+  if (!sessionId) {
+    throw new Error("Plex session row is missing Session.id.");
+  }
 
   const result = await query<RawRecordRow>(
     `
@@ -328,12 +327,39 @@ async function upsertRawSessionRecord(importJobId: string, sourceId: string, ite
       SET import_job_id = EXCLUDED.import_job_id,
           payload = EXCLUDED.payload,
           imported_at = NOW()
-      RETURNING id
+      RETURNING id, source_record_id
+    `,
+    [importJobId, sourceId, `session::${sessionId}`, JSON.stringify(item)]
+  );
+
+  return result.rows[0].id;
+}
+
+async function upsertProvisionalSessionRecord(
+  importJobId: string,
+  sourceId: string,
+  sourceRecordId: string,
+  item: PlexSessionItem
+) {
+  const result = await query<RawRecordRow>(
+    `
+      INSERT INTO raw_import_records (
+        import_job_id,
+        source_id,
+        source_record_id,
+        payload
+      )
+      VALUES ($1, $2, $3, $4::jsonb)
+      ON CONFLICT (source_id, source_record_id) DO UPDATE
+      SET import_job_id = EXCLUDED.import_job_id,
+          payload = EXCLUDED.payload,
+          imported_at = NOW()
+      RETURNING id, source_record_id
     `,
     [importJobId, sourceId, sourceRecordId, JSON.stringify(item)]
   );
 
-  return result.rows[0].id;
+  return result.rows[0];
 }
 
 async function loadPersistedHistoryRows(sourceId: string) {
@@ -367,6 +393,25 @@ async function loadPersistedSessionRows(sourceId: string) {
   );
 
   return result.rows;
+}
+
+function findReusableSessionRecordId(
+  session: PlexSessionItem,
+  sessionRows: PersistedPlexRawRow[],
+  history: PlexHistoryItem[]
+) {
+  const contentKey = buildSessionContentKey(session);
+
+  const match = sessionRows.find((row) => {
+    const payload = row.payload as PlexSessionItem;
+
+    return (
+      buildSessionContentKey(payload) === contentKey &&
+      !sessionMatchesRecentHistory(payload, row.imported_at, history)
+    );
+  });
+
+  return match?.source_record_id ?? null;
 }
 
 function sessionMatchesRecentHistory(
@@ -506,12 +551,26 @@ export async function runPlexImport() {
         shouldIncludeActiveSession(session, persistedHistory, importedAt)
       );
 
-      await Promise.all(activeSessions.map((item) => upsertRawSessionRecord(importJobId, sourceId, item)));
-
       const persistedSessionRows = await loadPersistedSessionRows(sourceId);
+      const provisionalSessionRows = await Promise.all(
+        activeSessions.map(async (item) => {
+          const reusableSourceRecordId = findReusableSessionRecordId(
+            item,
+            persistedSessionRows,
+            persistedHistory
+          );
+          const sourceRecordId =
+            reusableSourceRecordId ?? makeSessionSourceRecordId(item, importedAt);
+
+          return upsertProvisionalSessionRecord(importJobId, sourceId, sourceRecordId, item);
+        })
+      );
+
       await pruneExpiredSessionRecords(sourceId, persistedSessionRows, persistedHistory);
       const remainingSessionRows = await loadPersistedSessionRows(sourceId);
-      const activeSessionRecordIds = new Set(activeSessions.map((session) => makeSessionSourceRecordId(session)));
+      const activeSessionRecordIds = new Set(
+        provisionalSessionRows.map((row) => row.source_record_id)
+      );
       const normalized = [
         ...persistedHistoryRows.map((row) => normalizeHistoryItem(row.payload as PlexHistoryItem, row.id)),
         ...remainingSessionRows.map((row) => {

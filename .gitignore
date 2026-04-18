@@ -10,3 +10,4 @@ configs/plex.yaml
 .idea/
 tsconfig.tsbuildinfo
 docs/sources/plex/
+docs/sources/homeassistant

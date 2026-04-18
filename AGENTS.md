@@ -27,12 +27,31 @@ When working in this repository:
 - Use `README.md` as the primary human-facing map of the codebase, including how the project is structured and what each major file or directory is for.
 - Treat the containerized development environment as canonical; do not introduce host-local setup steps as the primary workflow.
 - Run project tooling inside the Docker environment orchestrated by `docker compose`, not directly on the host machine.
+- Treat the repository `docker-compose.yml` as the canonical local deployment definition for the application stack.
+- Do not assume the active application instance is running locally; the user may be operating the app on a remote Docker server instead.
+- If the local Docker Compose stack is not already running, ask the user before starting it.
+- When the active environment is remote, prefer asking the user to run commands or provide outputs from that remote Docker host rather than silently starting or substituting a local stack.
 - When adding scripts, commands, or automation, document and design them to execute within the application containers.
 - Treat live imported data as the default operating mode for the application; do not define product behavior around mocked datasets.
 - Configure secrets for authenticated external services through environment variables supplied to the `docker compose` environment from an env file.
+- Do not read `.env` files, `.env.*` files, secret override files, or similar local secret-bearing files unless the user explicitly asks for that inspection in the current task.
+- When a task needs secret-backed behavior, prefer asking the user to run a command, confirm whether configuration exists, or provide a sanitized value rather than opening secret files directly.
 - Record unresolved questions instead of inventing product behavior silently.
 - Keep changes additive and traceable; avoid deleting prior decisions unless they are clearly superseded.
 - If implementation begins before the spec is complete, document the rationale for any assumptions made.
+
+## Feature Delivery Procedure
+
+When starting or advancing a feature in this repository:
+- Create or update a feature spec first at `docs/architecture/<feature-name>.md` before implementation work begins.
+- Use that spec to drive a review and discussion with the user before coding.
+- Surface open questions explicitly and gather any missing real-world data before locking the implementation approach.
+- Update all relevant project-definition files when a feature is introduced or clarified, including `AGENTS.md`, `README.md`, and any supporting discovery notes that materially inform the feature.
+- Do not begin implementation on a new feature branch by default; first ask the user whether they want the branch created.
+- If the user wants a branch created, create it from the feature name and do not include the file suffix such as `.md` in the branch name.
+- Once a feature is implemented, ask the user whether they want the branch pushed.
+- After that, ask the user whether they want a PR raised.
+- If implementation or verification would require starting a stopped local Docker Compose stack, ask the user before doing that because the source of truth may currently be a remote Docker deployment.
 
 ## Engineering Standards
 
@@ -149,6 +168,19 @@ Potential relationship direction:
 - If a file or module has a non-obvious responsibility, make that clear in code comments or in `README.md`.
 - Keep documentation concise, current, and aligned with the actual repository state.
 
+## Workflow Checklist
+
+For new feature work, use this default sequence unless the user explicitly redirects it:
+1. Create or refine the feature spec at `docs/architecture/<feature-name>.md`.
+2. Review the spec with the user, answer open questions, and gather any real source data needed to de-risk the work.
+3. Update `AGENTS.md`, `README.md`, and any other relevant docs to record the feature and its current status.
+4. Ask the user whether they want a feature branch created before implementation starts.
+5. If they do, create the branch from the feature name without the `.md` suffix.
+6. Before starting a stopped local Docker Compose stack for implementation or verification, ask the user whether they want that local stack started.
+7. Implement, verify, and document the feature.
+8. When the feature is complete, ask whether the user wants the branch pushed.
+9. Ask whether the user wants a PR raised.
+
 ## Decision Log
 
 Use this section to record decisions as they are made.
@@ -184,6 +216,9 @@ Use this section to record decisions as they are made.
 | 2026-04-13 | Feature 8 is complete with resilient import actions, worker hardening, and source-health visibility. | Failed manual imports now return safely to `/sources`, scheduled sync ticks are guarded against overlap and hangs, and the UI surfaces failing, stale, and recovered source states without blocking the app. |
 | 2026-04-18 | Feature 9 is redefined to improve Home Assistant current-playing continuity for Sky Q. | The new priority is preserving programme history when Sky Q stays on the same channel and Home Assistant only exposes the latest current programme details. |
 | 2026-04-18 | The previous Plex enrichment and `/sources` polish scope moves from Feature 9 to Feature 10. | Sky Q current-playing continuity is a higher-priority source-truth issue and should be addressed before further Plex/UI polish. |
+| 2026-04-18 | Agents should not read local env files or similar secret-bearing files unless the user explicitly asks. | Secret-backed tasks should prefer user-run commands, sanitized inputs, or explicit permission to inspect sensitive configuration. |
+| 2026-04-18 | Feature work should follow a spec-first, review-first, branch-on-request workflow. | Define the feature under `docs/architecture`, review it with the user, update project docs, then ask whether to create a branch before implementation; after completion ask about push and PR steps. |
+| 2026-04-18 | Agents must ask before starting a stopped local Docker Compose stack. | The canonical deployment definition is the repo `docker-compose.yml`, but the active application may be running on a remote Docker host that the user must interact with directly. |
 
 ## Next Discovery Steps
 

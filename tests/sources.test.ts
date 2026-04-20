@@ -145,7 +145,7 @@ describe("sources orchestration", () => {
     checkPlexConnectivityMock.mockResolvedValue({
       ok: false,
       baseUrl: null,
-      message: "Plex token is not configured."
+      message: "Plex connectivity failed."
     });
     getPlexBaseUrlMock.mockReturnValue(null);
     mockSourceQueries({
@@ -201,7 +201,9 @@ describe("sources orchestration", () => {
     expect(statuses[0].connectionDetails).toContain("API: Connected");
     expect(statuses[0].connectionDetails).toContain("Base URL: http://ha.local:8123");
     expect(statuses[0].connectionDetails).toContain("Last failed import: 18 Apr 2026, 12:00");
-    expect(statuses[0].healthDetail).toBe("Home Assistant API timed out while fetching history rows.");
+    expect(statuses[0].healthDetail).toBe(
+      "Import failed. Check the source configuration and connectivity."
+    );
 
     expect(statuses[1]).toMatchObject({
       slug: "plex",
@@ -218,7 +220,7 @@ describe("sources orchestration", () => {
     });
     expect(statuses[1].connectionDetails).toEqual([
       "Base URL: not configured",
-      "Check: Plex token is not configured."
+      "Check: Plex connectivity failed."
     ]);
   });
 

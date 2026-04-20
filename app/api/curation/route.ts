@@ -57,10 +57,10 @@ export async function POST(request: Request) {
       ok: true,
       state
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Failed to update curation."
+        error: "Failed to update curation."
       },
       {
         status: 500

@@ -6,10 +6,10 @@ export async function POST() {
     const result = await runHomeAssistantImport();
 
     return NextResponse.json(result);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Failed to import Home Assistant history"
+        error: "Failed to import Home Assistant history."
       },
       {
         status: 500
@@ -17,4 +17,3 @@ export async function POST() {
     );
   }
 }
-

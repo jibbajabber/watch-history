@@ -22,10 +22,10 @@ export async function GET(
     const data = await getTimelineViewData(view);
 
     return NextResponse.json(data);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Failed to load timeline"
+        error: "Failed to load timeline."
       },
       {
         status: 500
@@ -33,4 +33,3 @@ export async function GET(
     );
   }
 }
-

@@ -23,7 +23,7 @@ Included:
 Excluded:
 - full end-to-end browser automation
 - broad coverage targets that are not yet realistic for the current codebase
-- GitHub Actions and mandatory CI gating, which move to Feature 15 unless the user explicitly redirects this feature
+- GitHub Actions and mandatory CI gating, which move to a later feature unless the user explicitly redirects this feature
 
 ## Problem Statement
 
@@ -88,7 +88,7 @@ This should be recorded in:
 - `README.md`
 - any future contributor workflow docs
 
-### CI Is Deferred To Feature 15
+### CI Is Deferred For Now
 
 The current repo guidance already points to a smaller first milestone:
 - settle local containerized testing first
@@ -97,7 +97,7 @@ The current repo guidance already points to a smaller first milestone:
 
 Planning decision for this feature:
 - Feature 14 delivers the local/containerized workflow only
-- Feature 15 will pick up GitHub Actions or other CI automation
+- a later feature will pick up GitHub Actions or other CI automation
 
 ## Candidate Test Layers
 
@@ -179,7 +179,7 @@ Exit criteria:
 - record CI as the explicit next feature rather than an unresolved branch of this one
 
 Exit criteria:
-- the repository has a clear next-step plan for DB-backed coverage and Feature 15 CI work
+- the repository has a clear next-step plan for DB-backed coverage and future CI work
 
 ## Acceptance Criteria
 
@@ -187,7 +187,7 @@ Exit criteria:
 - tests run inside the Docker-managed environment
 - at least one meaningful logic-heavy area is covered by automated tests
 - `AGENTS.md` and `README.md` document testing expectations and TDD guidance
-- the feature leaves GitHub Actions explicitly deferred to Feature 15
+- the feature leaves GitHub Actions explicitly deferred to a later feature
 
 ## Implementation Status
 
@@ -265,10 +265,10 @@ If work resumes in a new context window, pick up from this exact point:
 
 Recommended next sequence:
 - first: any remaining DB-backed slices that materially increase confidence
-- second: Feature 15 CI or GitHub Actions work
+- second: a later CI or GitHub Actions feature
 
 Recommended resume assumptions:
-- keep GitHub Actions deferred to Feature 15
+- keep GitHub Actions deferred to a later feature
 - keep browser/UI testing out of scope
 - keep using helper extraction before introducing DB-heavy tests when practical
 - do not add coverage thresholds yet
@@ -289,5 +289,5 @@ If implementation resumes without fresh workflow clarification, use these defaul
 - first remaining targets should be rewiring `analytics`, Home Assistant import, and Plex import to the already-created helper modules, then choosing between `source-retention` cleanup logic and a first DB-backed slice
 - run tests through the existing Docker-managed environment rather than host-local commands
 - defer importer and DB-backed tests until the base `vitest` workflow is stable
-- defer GitHub Actions into Feature 15
+- defer GitHub Actions into a later feature
 - avoid minimum coverage thresholds in the first testing milestone

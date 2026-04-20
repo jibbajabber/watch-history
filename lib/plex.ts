@@ -106,42 +106,18 @@ export function getPlexToken() {
   return value.trim();
 }
 
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    const cause = error.cause;
+function getNetworkHint(error: unknown) {
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
 
-    if (cause && typeof cause === "object") {
-      const code = "code" in cause && typeof cause.code === "string" ? cause.code : null;
-      const message =
-        "message" in cause && typeof cause.message === "string" ? cause.message : null;
-
-      if (code && message) {
-        return `${error.message} (${code}: ${message})`;
-      }
-
-      if (message) {
-        return `${error.message} (${message})`;
-      }
-    }
-
-    return error.message;
-  }
-
-  return "Failed to reach Plex.";
-}
-
-function getNetworkHint(message: string) {
-  const lowered = message.toLowerCase();
-
-  if (lowered.includes("enotfound")) {
+  if (message.includes("enotfound")) {
     return "DNS resolution failed. Check PLEX_BASE_URL.";
   }
 
-  if (lowered.includes("econnrefused")) {
+  if (message.includes("econnrefused")) {
     return "Connection was refused. Check the Plex host, port, and whether it is reachable from the container.";
   }
 
-  if (lowered.includes("etimedout") || lowered.includes("headers timeout")) {
+  if (message.includes("etimedout") || message.includes("headers timeout")) {
     return "Connection timed out. Check network reachability between the container and Plex.";
   }
 
@@ -248,7 +224,7 @@ export async function checkPlexConnectivity(): Promise<PlexConnectivityResult> {
       latestViewedAt
     };
   } catch (error) {
-    const message = getErrorMessage(error);
+    const message = error instanceof Error ? error.message : "";
 
     if (message.includes("rejected the supplied token")) {
       return {
@@ -259,21 +235,24 @@ export async function checkPlexConnectivity(): Promise<PlexConnectivityResult> {
       };
     }
 
-    if (message.includes("status")) {
+    if (
+      message.startsWith("Plex history request failed with status ") ||
+      message.startsWith("Plex sessions request failed with status ")
+    ) {
       return {
         ok: false,
         code: "api_error",
-        message,
+        message: "Plex API check failed.",
         baseUrl
       };
     }
 
-    const hint = getNetworkHint(message);
+    const hint = getNetworkHint(error);
 
     return {
       ok: false,
       code: "network_error",
-      message: hint ? `${message} ${hint}` : message,
+      message: hint ? `Plex connectivity failed. ${hint}` : "Plex connectivity failed.",
       baseUrl
     };
   }

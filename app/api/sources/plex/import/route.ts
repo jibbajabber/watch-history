@@ -6,10 +6,10 @@ export async function POST() {
     const result = await runPlexImport();
 
     return NextResponse.json(result);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Failed to import Plex history"
+        error: "Failed to import Plex history."
       },
       {
         status: 500

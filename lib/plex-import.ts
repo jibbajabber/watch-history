@@ -603,7 +603,7 @@ export async function runPlexImport() {
         "failed",
         0,
         0,
-        error instanceof Error ? error.message : "Unknown Plex import error"
+        "Plex import failed."
       );
       throw error;
     }

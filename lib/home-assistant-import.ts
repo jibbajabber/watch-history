@@ -592,8 +592,13 @@ export async function runHomeAssistantImport() {
         recordsImported: importedCount
       };
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Import failed.";
-      await completeImportJob(importJobId, "failed", 0, 0, message);
+      await completeImportJob(
+        importJobId,
+        "failed",
+        0,
+        0,
+        "Home Assistant import failed."
+      );
       throw error;
     }
   } finally {

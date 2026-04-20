@@ -8,10 +8,10 @@ export async function GET() {
     return NextResponse.json({
       sources
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Failed to load sources"
+        error: "Failed to load sources."
       },
       {
         status: 500
@@ -19,4 +19,3 @@ export async function GET() {
     );
   }
 }
-

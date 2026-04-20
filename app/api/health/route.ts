@@ -8,11 +8,11 @@ export async function GET() {
     return NextResponse.json({
       ok: true
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Unknown database error"
+        error: "Database health check failed."
       },
       {
         status: 503
@@ -20,4 +20,3 @@ export async function GET() {
     );
   }
 }
-

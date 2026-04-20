@@ -51,52 +51,27 @@ function getAccessToken() {
   return token.trim() || null;
 }
 
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    const cause = error.cause;
-
-    if (cause && typeof cause === "object") {
-      const code =
-        "code" in cause && typeof cause.code === "string" ? cause.code : null;
-      const message =
-        "message" in cause && typeof cause.message === "string" ? cause.message : null;
-
-      if (code && message) {
-        return `${error.message} (${code}: ${message})`;
-      }
-
-      if (message) {
-        return `${error.message} (${message})`;
-      }
-    }
-
-    return error.message;
-  }
-
-  return "Failed to reach Home Assistant.";
-}
-
-function getNetworkHint(message: string) {
-  const lowered = message.toLowerCase();
+function getNetworkHint(error: unknown) {
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
 
   if (
-    lowered.includes("self-signed") ||
-    lowered.includes("unable to verify the first certificate") ||
-    lowered.includes("self signed certificate") ||
-    lowered.includes("certificate")
+    message.includes("self-signed") ||
+    message.includes("unable to verify the first certificate") ||
+    message.includes("self signed certificate") ||
+    message.includes("certificate")
   ) {
     return "TLS verification failed. The container likely does not trust your Home Assistant CA yet.";
   }
 
-  if (lowered.includes("enotfound")) {
+  if (message.includes("enotfound")) {
     return "DNS resolution failed. Check the Home Assistant hostname in configs/home-assistant.yaml.";
   }
 
-  if (lowered.includes("econnrefused")) {
+  if (message.includes("econnrefused")) {
     return "Connection was refused. Check the Home Assistant URL, port, and whether it is reachable from the container.";
   }
 
-  if (lowered.includes("etimedout") || lowered.includes("headers timeout")) {
+  if (message.includes("etimedout") || message.includes("headers timeout")) {
     return "Connection timed out. Check network reachability between the container and Home Assistant.";
   }
 
@@ -255,13 +230,12 @@ export async function checkHomeAssistantConnectivity(): Promise<HomeAssistantCon
       entityChecks
     };
   } catch (error) {
-    const message = getErrorMessage(error);
-    const hint = getNetworkHint(message);
+    const hint = getNetworkHint(error);
 
     return {
       ok: false,
       code: "network_error",
-      message: hint ? `${message} ${hint}` : message,
+      message: hint ? `Home Assistant connectivity failed. ${hint}` : "Home Assistant connectivity failed.",
       baseUrl: configResult.config.baseUrl,
       entities: configResult.config.entities
     };

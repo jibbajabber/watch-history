@@ -107,9 +107,9 @@ When starting or advancing a feature in this repository:
 ## Testing Workflow
 
 - Use `vitest` as the v1 test runner for local automated testing.
-- Prefer a failing or focused test first for logic-heavy feature work and reproducible bug fixes when practical.
-- If strict test-first sequencing is not practical, add or update the relevant tests in the same change as the implementation.
-- Keep the first testing slices focused on pure server-side helpers and extracted logic; widen into DB-backed or UI-heavy tests incrementally.
+- Prefer a failing or focused test first for logic-heavy feature work and reproducible bug fixes when practical, as long as the test does not require external DB infrastructure.
+- If strict test-first sequencing is not practical, add or update the relevant non-DB tests in the same change as the implementation.
+- Keep the first testing slices focused on pure server-side helpers and mocked orchestration that do not require external DB infrastructure; defer DB-backed or UI-heavy test work to later features.
 - Treat coverage output from `npm run test` as part of the normal verification feedback, but do not enforce minimum thresholds in Feature 14.
 
 ## Configuration And Secrets
@@ -279,13 +279,13 @@ Use this section to record decisions as they are made.
 | 2026-04-18 | Feature 14 coverage expansion now includes mocked `sources.ts` orchestration tests. | The container-first suite now covers source status assembly and shared health notices without introducing the DB-backed test layer yet. |
 | 2026-04-18 | Feature 14 coverage expansion now includes mocked `analytics.ts` orchestration tests and helper rewiring. | The production analytics module now uses `lib/analytics-data.ts`, and the suite covers analytics query orchestration without introducing a DB-backed test layer. |
 | 2026-04-18 | Remaining Feature 14 coverage work should stay non-DB and resume with importer/helper rewiring. | Resume order is `lib/home-assistant-import.ts`, then `lib/plex-import.ts`, then `lib/source-retention.ts`; DB-backed testing moves to a follow-up feature. |
+| 2026-04-20 | Feature 14 resumed with mocked Home Assistant and Plex importer orchestration plus source-retention cleanup coverage. | The non-DB slice now exercises real `runHomeAssistantImport`, `runPlexImport`, and `runSourceRetentionCleanup` paths with mocked DB and source clients, keeping the suite container-first while expanding coverage into importer and cleanup flows. |
 
 ## Next Discovery Steps
 
 1. Pick up Feature 15 for CI or GitHub Actions now that the local container-first test workflow exists.
-2. Resume Feature 14 on the non-DB path, starting with `lib/home-assistant-import.ts` coverage.
-3. If Feature 14 resumes beyond that first slice, continue with `lib/plex-import.ts`, then `lib/source-retention.ts`.
-4. Decide whether day-of-week patterns and streak-style metrics belong in a Feature 12 follow-up pass or a later feature.
+2. If Feature 14 needs more breadth, continue into any remaining DB-backed coverage slices after the non-DB importer and retention work completed here.
+3. Decide whether day-of-week patterns and streak-style metrics belong in a Feature 12 follow-up pass or a later feature.
 
 ## Feature Progress
 
@@ -316,4 +316,4 @@ Use this section to record decisions as they are made.
 - Feature 13: Complete
   A curation layer now lets the user favourite and hide individual timeline items, uses recommendation-oriented language in the curated experience, excludes hidden items from default timeline and analytics views, and recovers curated entries from a dedicated `/favourites` tab built on top of imported history.
 - Feature 14: Complete
-  The repository now has a container-first local automated testing workflow using `vitest`, text and HTML coverage output, helper-focused and mocked orchestration tests, extracted-helper rewiring for analytics, and documented TDD expectations, with CI deferred to Feature 15.
+  The repository now has a container-first local automated testing workflow using `vitest`, text and HTML coverage output, helper-focused and mocked orchestration tests, importer and retention cleanup coverage, extracted-helper rewiring for analytics, and documented TDD expectations, with CI deferred to Feature 15.

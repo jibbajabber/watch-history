@@ -191,7 +191,7 @@ Exit criteria:
 
 ## Implementation Status
 
-Current state as of Saturday, 18 April 2026:
+Current state as of Monday, 20 April 2026:
 - `vitest` is installed and wired into `package.json`
 - canonical Docker-first commands are `docker compose exec web npm run test`, `docker compose exec web npm run test:watch`, and `docker compose exec web npm run typecheck`
 - `npm run test` runs with coverage enabled and writes both text and HTML output
@@ -223,7 +223,10 @@ Current automated suite covers:
 - analytics response-shaping helpers
 - analytics query orchestration in `lib/analytics.ts` via mocked DB and curation seams
 - Home Assistant normalization helpers
+- Home Assistant import orchestration in `lib/home-assistant-import.ts` via mocked DB, connectivity, and fetch seams
 - Plex normalization helpers
+- Plex import orchestration in `lib/plex-import.ts` via mocked DB and fetch seams
+- source-retention cleanup orchestration in `lib/source-retention.ts` via mocked DB and advisory-lock seams
 - source status assembly and shared health notices in `lib/sources.ts` via mocked orchestration tests
 
 Last verified commands:
@@ -231,8 +234,8 @@ Last verified commands:
 - `docker compose exec web npm run test`
 
 Last verified results:
-- `34` tests passed across `9` files
-- overall coverage: `43.24%`
+- `38` tests passed across `12` files
+- overall coverage: `68.57%`
 - `analytics.ts`: `100%`
 - `analytics-data.ts`: `98.41%`
 - `timeline-data.ts`: `90.95%`
@@ -240,14 +243,16 @@ Last verified results:
 - `plex-normalization.ts`: `92.16%`
 - `format.ts`: `100%`
 - `source-status.ts`: `64.78%`
-- `source-retention.ts`: `35.11%`
+- `source-retention.ts`: `81.77%`
 - `sources.ts`: `90.49%`
 
 Low-coverage or uncovered areas still left:
 - `timeline.ts`
 - `home-assistant-import.ts`
 - `plex-import.ts`
-- `source-retention.ts`
+- `home-assistant.ts`
+- `plex.ts`
+- `curation.ts`
 - any DB-backed/query-heavy modules
 
 ## Resume Here
@@ -255,14 +260,12 @@ Low-coverage or uncovered areas still left:
 If work resumes in a new context window, pick up from this exact point:
 - the Docker-first test workflow is implemented and working
 - the repo already has the extracted pure helper modules listed above
-- the suite now also includes mocked coverage for `lib/sources.ts` and `lib/analytics.ts`, but remains mostly helper-heavy rather than DB-heavy
-- Resume Feature 14 on the non-DB path, starting with `lib/home-assistant-import.ts` coverage.
+- the suite now also includes mocked coverage for `lib/sources.ts`, `lib/home-assistant-import.ts`, `lib/plex-import.ts`, and `lib/source-retention.ts`, but remains mostly helper-heavy rather than DB-heavy
+- any further Feature 14 expansion should move into the remaining DB-backed coverage slices rather than the non-DB importer path
 
 Recommended next sequence:
-Explicit non-DB resume order:
-- first: `lib/home-assistant-import.ts`
-- second: `lib/plex-import.ts`
-- third: `lib/source-retention.ts`
+- first: any remaining DB-backed slices that materially increase confidence
+- second: Feature 15 CI or GitHub Actions work
 
 Recommended resume assumptions:
 - keep GitHub Actions deferred to Feature 15

@@ -35,7 +35,7 @@ These documents are the working bridge between product planning and code changes
 | Feature 11 | `feature-11-source-data-retention-controls.md` | Per-source retention for raw data, normalized history, import jobs, and provisional source data. | —                              | —                                                          |
 | Feature 12 | `feature-12-analytics-tab.md` | Dedicated analytics destination for watch patterns, dataset growth, and import activity. | —                              | —                                                          |
 | Feature 13 | `feature-13-favourites-and-curation.md` | Favourites, hidden-item curation, and curated-history recovery. | Saturday, 18 April 2026, 18:30 | [PR8](https://github.com/jibbajabber/watch-history/pull/8) |
-| Feature 14 | `feature-14-testing-and-tdd-workflow.md` | Container-first automated testing workflow and TDD guidance. | —                              | —                                                          |
+| Feature 14 | `feature-14-testing-and-tdd-workflow.md` | Container-first automated testing workflow and TDD guidance. | Monday, 20 April 2026, 19:36   | [PR9](https://github.com/jibbajabber/watch-history/pull/9) |
 
 ## Notes
 

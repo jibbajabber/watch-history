@@ -23,14 +23,6 @@ function getSourceDisplayName(slug: string) {
   return "Source";
 }
 
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return "An unexpected error occurred.";
-}
-
 function redirectToSources(params: Record<string, string>) {
   const searchParams = new URLSearchParams(params);
 
@@ -48,13 +40,13 @@ export async function importSourceHistory(formData: FormData) {
     } else {
       throw new Error("Unsupported source import.");
     }
-  } catch (error) {
+  } catch {
     revalidatePath("/sources");
 
     redirectToSources({
       tone: "error",
       message: `${getSourceDisplayName(slug)} import failed`,
-      detail: getErrorMessage(error)
+      detail: `${getSourceDisplayName(slug)} import could not be completed. Check the source configuration and connectivity.`
     });
   }
 
@@ -110,13 +102,13 @@ export async function updateHomeAssistantSyncSettings(formData: FormData) {
     } else {
       throw new Error("Unsupported source sync settings.");
     }
-  } catch (error) {
+  } catch {
     revalidatePath("/sources");
 
     redirectToSources({
       tone: "error",
       message: `${getSourceDisplayName(slug)} sync settings failed`,
-      detail: getErrorMessage(error)
+      detail: `${getSourceDisplayName(slug)} sync settings could not be saved. Check the source configuration and try again.`
     });
   }
 
@@ -200,13 +192,13 @@ export async function updateSourceRetentionSettings(formData: FormData) {
     } else {
       throw new Error("Unsupported source retention settings.");
     }
-  } catch (error) {
+  } catch {
     revalidatePath("/sources");
 
     redirectToSources({
       tone: "error",
       message: `${getSourceDisplayName(slug)} retention settings failed`,
-      detail: getErrorMessage(error)
+      detail: `${getSourceDisplayName(slug)} retention settings could not be saved. Check the source configuration and try again.`
     });
   }
 

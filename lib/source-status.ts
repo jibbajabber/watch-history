@@ -79,10 +79,10 @@ export function formatNextSync(value: string | null) {
 
 export function formatRelativeFailure(message: string | null) {
   if (!message) {
-    return "Import failed.";
+    return "Import failed. Check the source configuration and connectivity.";
   }
 
-  return message.length > 120 ? `${message.slice(0, 117)}...` : message;
+  return "Import failed. Check the source configuration and connectivity.";
 }
 
 export function hasLaterFailure(importRow: ImportRow | null) {

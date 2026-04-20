@@ -34,6 +34,7 @@ When working in this repository:
 - When adding scripts, commands, or automation, document and design them to execute within the application containers.
 - Treat live imported data as the default operating mode for the application; do not define product behavior around mocked datasets.
 - Configure secrets for authenticated external services through environment variables supplied to the `docker compose` environment from an env file.
+- Treat `docs/security/security.md` as the standing security-process reference for secret handling, browser/API exposure review, logging hygiene, and secure development flow.
 - Do not read `.env` files, `.env.*` files, secret override files, or similar local secret-bearing files unless the user explicitly asks for that inspection in the current task.
 - When a task needs secret-backed behavior, prefer asking the user to run a command, confirm whether configuration exists, or provide a sanitized value rather than opening secret files directly.
 - Record unresolved questions instead of inventing product behavior silently.
@@ -111,6 +112,8 @@ When starting or advancing a feature in this repository:
 - If strict test-first sequencing is not practical, add or update the relevant non-DB tests in the same change as the implementation.
 - Keep the first testing slices focused on pure server-side helpers and mocked orchestration that do not require external DB infrastructure; defer DB-backed or UI-heavy test work to later features.
 - Treat coverage output from `npm run test` as part of the normal verification feedback, but do not enforce minimum thresholds in Feature 14.
+- For secret-handling or browser/API exposure changes, follow the security test cadence in `docs/security/security.md`: run focused tests while implementing, then `docker compose exec web npm run typecheck`, `docker compose exec web npm run test`, and `docker compose exec web npm run build` before close-out.
+- Before closing out a security-sensitive feature, use the security close-out checklist in `docs/security/security.md`.
 
 ## Configuration And Secrets
 
@@ -180,6 +183,7 @@ Potential relationship direction:
 
 - `README.md` should be maintained alongside code changes, not updated later as cleanup.
 - When new directories, modules, or libraries are introduced, document their purpose in `README.md`.
+- When the repository adds a standing process document such as `docs/security/security.md`, reference it from `README.md` and `AGENTS.md` so the workflow is discoverable.
 - Keep `docs/architecture/README.md` in sync with the architecture-spec directory so contributors have a current per-spec index instead of relying on implicit discovery.
   For completed features with PRs, record the actual PR number and derive the day-of-week for the `Delivered` timestamp from the current local date/time when the PR is raised.
 - When those changes affect how a contributor navigates the repo, update the `README.md` `Current Structure` section in the same change rather than leaving the codebase map implicit.
@@ -265,25 +269,31 @@ Use this section to record decisions as they are made.
 | 2026-04-18 | Feature 12 v1 should start as a single analytics destination with overview, watch patterns, dataset growth, and import activity sections. | The first slice should use only existing `watch_events`, `raw_import_records`, `import_jobs`, and `sources` data, without adding speculative health-history or metadata-heavy dashboards. |
 | 2026-04-18 | Feature 12 is complete with a dedicated analytics tab. | `/analytics` now exposes real-data overview totals, monthly watch and dataset trends, source contribution, and recent import activity using only stored `watch_events`, `raw_import_records`, `import_jobs`, and `sources` data. |
 | 2026-04-18 | Feature 13 should add favourites and recommendation curation on top of timeline history. | The product needs a user-owned curation layer so meaningful content can be favourited, recommended, or hidden without destroying source-truth imports. |
-| 2026-04-18 | Feature 14 should establish a container-first automated testing workflow with TDD guidance. | Tests should run through the Docker-managed environment, update contributor workflow expectations, and leave a clear decision on whether GitHub Actions is included here or split into Feature 15. |
+| 2026-04-18 | Feature 14 should establish a container-first automated testing workflow with TDD guidance. | Tests should run through the Docker-managed environment, update contributor workflow expectations, and leave a clear decision on whether GitHub Actions is included here or split into a later feature. |
 | 2026-04-18 | Resume-default scope for Feature 13 is event-level curation with reversible hiding. | Unless the user redirects, curation attaches to `watch_events`, hidden items are suppressed rather than deleted, and hidden items should be excluded from default timeline and analytics views. |
 | 2026-04-18 | Feature 13 v1 should ship as watch-event curation plus a dedicated `/favourites` route. | Use a narrow `watch_event_curation` model, keep imports unchanged, add a visible desktop action trigger alongside touch long-press, and make hidden items recoverable from the curated view. |
 | 2026-04-18 | Feature 13 should store only a single favourite flag in v1. | `Favourites` remains the destination name; recommendation wording can appear in supporting UI copy or actions, but it should not be a separate persisted state. |
 | 2026-04-18 | Feature 13 stores curation by source plus stable event key so it survives import rebuilds. | Current Home Assistant and Plex imports rebuild `watch_events`, so favourites and hidden-item state join by durable source/event identity rather than a transient row id. |
 | 2026-04-18 | Feature 13 is complete with a dedicated `/favourites` route and timeline curation controls. | Timeline rows now support favourite and hide actions with a visible desktop trigger and touch long-press, hidden items drop out of default timeline and analytics views, and `/favourites` can recover hidden entries. |
-| 2026-04-18 | Resume-default scope for Feature 14 is Docker-first local testing with CI deferred. | Unless the user redirects, the first testing milestone should use `vitest`, target logic-heavy server-side code first, and leave GitHub Actions for Feature 15. |
-| 2026-04-18 | Feature 14 planning now fixes the first test slice to container-first `vitest` coverage for pure server-side helpers before DB-backed tests. | Initial targets should start with retention, formatting, and extracted source-status logic from the existing app code, with GitHub Actions still deferred to Feature 15. |
+| 2026-04-18 | Resume-default scope for Feature 14 is Docker-first local testing with CI deferred. | Unless the user redirects, the first testing milestone should use `vitest`, target logic-heavy server-side code first, and leave GitHub Actions for a later feature. |
+| 2026-04-18 | Feature 14 planning now fixes the first test slice to container-first `vitest` coverage for pure server-side helpers before DB-backed tests. | Initial targets should start with retention, formatting, and extracted source-status logic from the existing app code, with GitHub Actions still deferred to a later feature. |
 | 2026-04-18 | Feature 14 implementation starts with `vitest` coverage in the `web` container and pure helper tests. | The initial automated suite covers formatting, retention config logic, and extracted source-status helpers, with coverage output shown by `npm run test` and no minimum threshold yet. |
-| 2026-04-18 | Feature 14 is complete with container-first `vitest` workflow and coverage output. | The repository now has Docker-native test commands, helper-focused automated coverage, README and AGENTS TDD guidance, and CI intentionally deferred to Feature 15. |
+| 2026-04-18 | Feature 14 is complete with container-first `vitest` workflow and coverage output. | The repository now has Docker-native test commands, helper-focused automated coverage, README and AGENTS TDD guidance, and CI intentionally deferred to a later feature. |
 | 2026-04-18 | Feature 14 coverage expansion now includes extracted timeline and analytics helpers. | The helper-focused suite now covers timeline shaping and analytics response mapping in addition to formatting, retention, and source-status logic, while DB-backed import and query coverage remains a follow-up slice. |
 | 2026-04-18 | Feature 14 coverage expansion now includes mocked `sources.ts` orchestration tests. | The container-first suite now covers source status assembly and shared health notices without introducing the DB-backed test layer yet. |
 | 2026-04-18 | Feature 14 coverage expansion now includes mocked `analytics.ts` orchestration tests and helper rewiring. | The production analytics module now uses `lib/analytics-data.ts`, and the suite covers analytics query orchestration without introducing a DB-backed test layer. |
 | 2026-04-18 | Remaining Feature 14 coverage work should stay non-DB and resume with importer/helper rewiring. | Resume order is `lib/home-assistant-import.ts`, then `lib/plex-import.ts`, then `lib/source-retention.ts`; DB-backed testing moves to a follow-up feature. |
 | 2026-04-20 | Feature 14 resumed with mocked Home Assistant and Plex importer orchestration plus source-retention cleanup coverage. | The non-DB slice now exercises real `runHomeAssistantImport`, `runPlexImport`, and `runSourceRetentionCleanup` paths with mocked DB and source clients, keeping the suite container-first while expanding coverage into importer and cleanup flows. |
+| 2026-04-20 | Feature 15 should be a security review focused on secret-exposure hardening. | The next feature now audits browser-visible responses, server actions, logs, client bundles, and build artifacts so tokens, passwords, and database URLs stay server-side. |
+| 2026-04-20 | Feature 15 now has an explicit audit checklist and phased review plan. | The security review should proceed through surface inventory, boundary review, error and log hygiene, build-artifact inspection, and remediation tracking. |
+| 2026-04-20 | Feature 15 initial audit found browser-facing raw error forwarding and remediated it. | API routes, server actions, connectivity helpers, and persisted import failure text now use generic public messages, with regression coverage added for the safety checks. |
+| 2026-04-20 | Feature 15 scope treats the current sensitive env vars as private. | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `DATABASE_URL`, `HOME_ASSISTANT_ACCESS_TOKEN`, and `PLEX_TOKEN` must not be recoverable through browser state, logs, API routes, or build artifacts. |
+| 2026-04-20 | `docs/security/security.md` is the standing security-process reference. | The repo now has a durable security playbook for secret handling, browser/API exposure review, logging hygiene, and secure development flow. |
+| 2026-04-20 | Production build output review found no public source maps or browser bundle leaks. | Secret-bearing env-var names appear only in server-only chunks; the static browser bundles and emitted build artifacts do not expose the sensitive values. |
 
 ## Next Discovery Steps
 
-1. Pick up Feature 15 for CI or GitHub Actions now that the local container-first test workflow exists.
+1. Pick up Feature 15 for the security review and secret-exposure hardening pass.
 2. If Feature 14 needs more breadth, continue into any remaining DB-backed coverage slices after the non-DB importer and retention work completed here.
 3. Decide whether day-of-week patterns and streak-style metrics belong in a Feature 12 follow-up pass or a later feature.
 
@@ -316,4 +326,4 @@ Use this section to record decisions as they are made.
 - Feature 13: Complete
   A curation layer now lets the user favourite and hide individual timeline items, uses recommendation-oriented language in the curated experience, excludes hidden items from default timeline and analytics views, and recovers curated entries from a dedicated `/favourites` tab built on top of imported history.
 - Feature 14: Complete
-  The repository now has a container-first local automated testing workflow using `vitest`, text and HTML coverage output, helper-focused and mocked orchestration tests, importer and retention cleanup coverage, extracted-helper rewiring for analytics, and documented TDD expectations, with CI deferred to Feature 15.
+  The repository now has a container-first local automated testing workflow using `vitest`, text and HTML coverage output, helper-focused and mocked orchestration tests, importer and retention cleanup coverage, extracted-helper rewiring for analytics, and documented TDD expectations, with CI deferred to a later feature.

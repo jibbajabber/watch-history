@@ -35,9 +35,15 @@ describe("source status helpers", () => {
   });
 
   it("shortens long failure messages", () => {
-    expect(formatRelativeFailure(null)).toBe("Import failed.");
-    expect(formatRelativeFailure("short failure")).toBe("short failure");
-    expect(formatRelativeFailure("x".repeat(140))).toBe(`${"x".repeat(117)}...`);
+    expect(formatRelativeFailure(null)).toBe(
+      "Import failed. Check the source configuration and connectivity."
+    );
+    expect(formatRelativeFailure("short failure")).toBe(
+      "Import failed. Check the source configuration and connectivity."
+    );
+    expect(formatRelativeFailure("x".repeat(140))).toBe(
+      "Import failed. Check the source configuration and connectivity."
+    );
   });
 
   it("detects a later failure relative to the latest success", () => {

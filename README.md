@@ -55,6 +55,7 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `db/init/002_watch_event_curation.sql`: Initial schema extension for persistent watch-event curation.
 - `docs/architecture/`: Feature specs, architecture notes, and implementation-shaping decisions that drive review-first development for each major slice of the product.
                         See [docs/architecture/README.md](docs/architecture/README.md): Index of architecture specs, their purpose, and the feature-by-feature map for this planning area.
+- `docs/security/security.md`: Standing security-process guide for secret handling, browser/API exposure review, logging hygiene, and secure development flow.
 - `lib/`: Server-side data access, formatting, and shared type definitions.
 - `lib/app-config.ts`: App-level environment and timezone helpers.
 - `lib/analytics.ts`: Server-side analytics queries for overview totals, watch-pattern rollups, dataset growth, and import activity.
@@ -81,7 +82,7 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `public/channel-logos/`: Curated local SVG channel logo assets for recognized channels.
 - `public/static/watch-history-main.png`: Main README screenshot of the current app.
 - `scripts/source-sync-worker.ts`: Scheduled source sync worker for Docker Compose, currently handling Home Assistant and Plex.
-- `tests/`: `vitest` suites for pure server-side helpers plus mocked server-side orchestration coverage such as source status assembly, importer rebuilding, and source-retention cleanup.
+- `tests/`: `vitest` suites for pure server-side helpers, mocked server-side orchestration coverage such as source status assembly, importer rebuilding, and source-retention cleanup, plus secret-exposure regression checks.
 - `Dockerfile`: Canonical application container definition for local development.
 - `docker-compose.yml`: Container orchestration for the web application and PostgreSQL database.
 - `next.config.ts`: Next.js runtime configuration.
@@ -142,9 +143,18 @@ Completed:
 - Feature 12: analytics tab for overview, watch patterns, dataset growth, source contribution, and import activity from real stored data
 - Feature 13: favourites tab with persistent favourite and hide curation, hidden-item exclusion from default timeline and analytics views, and recovery of hidden items from `/favourites`
 - Feature 14: container-first local automated testing with `vitest`, coverage output, helper-focused tests, mocked source, importer, retention, and analytics orchestration coverage, and documented TDD guidance
+## Security Process
+
+- `docs/security/security.md` is the standing process guide for keeping user-provided secrets server-side and out of browser-visible, logged, or build-generated surfaces.
+- Follow that guide when changing routes, server actions, connectivity helpers, config loaders, or background workers.
+- For security-sensitive changes, run focused tests while you work and finish with `docker compose exec web npm run typecheck`, `docker compose exec web npm run test`, and `docker compose exec web npm run build` before closing out the change.
+
+## Planned Next Feature
+
+- Feature 15: security review and secret-exposure hardening across browser-visible paths, API responses, logs, and build artifacts
 
 Recommended next pickup:
-1. Pick up Feature 15 for CI or GitHub Actions once the local container-first test workflow is stable enough to enforce remotely
+1. Pick up Feature 15 for the security review and secret-exposure hardening pass
 2. Resume any remaining DB-backed coverage work for Feature 14 only if you want to broaden beyond the current non-DB importer and retention slices
 3. Decide whether streak and time-of-day metrics belong in a Feature 12 follow-up pass or a later feature
 
@@ -188,21 +198,21 @@ If dependencies change, rebuild the Docker image before running tests so the con
 
 ## Environment Variables
 
-These variables are required by the Compose environment:
-- `POSTGRES_DB`
+Sensitive variables that must stay private:
 - `POSTGRES_USER`
 - `POSTGRES_PASSWORD`
 - `DATABASE_URL`
+- `HOME_ASSISTANT_ACCESS_TOKEN`
+- `PLEX_TOKEN`
+
+Other variables required by the Compose environment:
+- `POSTGRES_DB`
 - `APP_URL`
 - `APP_INTERNAL_URL`
 - `APP_TIMEZONE`
 
-These variables are reserved for the Home Assistant integration flow:
-- `HOME_ASSISTANT_ACCESS_TOKEN`
-
-These variables are reserved for the planned Plex integration flow:
+These variables are reserved for the planned Plex integration flow but are not secrets:
 - `PLEX_BASE_URL`
-- `PLEX_TOKEN`
 
 `DATABASE_URL` should be derived from the Postgres settings, for example:
 
@@ -302,7 +312,7 @@ retention:
   mode: indefinite
 ```
 
-`PLEX_BASE_URL` and `PLEX_TOKEN` stay in `.env`, while the Plex worker schedule stays in `configs/plex.yaml`.
+`PLEX_BASE_URL` is a non-secret config value that can live in `.env`, while `PLEX_TOKEN` is secret and must stay in `.env`; the Plex worker schedule stays in `configs/plex.yaml`.
 
 Retention notes:
 - `retention.mode: indefinite` keeps durable source history, import-job audit rows, and any source-specific provisional rows until normal source updates replace them

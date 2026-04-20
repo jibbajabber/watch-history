@@ -66,6 +66,7 @@ When starting or advancing a feature in this repository:
 - Prefer simple, elegant solutions over clever abstractions.
 - Keep the codebase modular, with small focused libraries/components and clear boundaries.
 - Organize code so features and responsibilities are easy to locate, reason about, and test.
+- Prefer testable seams around logic-heavy behavior so pure helper coverage can land before DB-backed or UI-heavy tests.
 - Avoid tightly coupled modules and broad shared utilities that accumulate unrelated concerns.
 - Add abstractions only when they reduce complexity or duplication in a durable way.
 - Favor maintainability and readability over premature optimization.
@@ -97,10 +98,19 @@ When starting or advancing a feature in this repository:
 - Maintain one or more project `Dockerfile` definitions that describe the application runtime and toolchain explicitly.
 - Treat the Docker image definition as the authoritative description of the development and execution environment.
 - All application tooling should run inside this Docker-managed environment, including dependency installation, app startup, tests, linting, formatting, code generation, and one-off maintenance tasks.
+- The canonical automated test entrypoint is the `web` container; prefer `docker compose exec web ...` for `vitest`, coverage, and typecheck commands.
 - Do not rely on locally installed host tools as part of the normal project workflow, beyond Docker and `docker compose` themselves.
 - When examples or automation are added, prefer `docker compose run ...`, `docker compose exec ...`, or equivalent container-native entrypoints over host-local commands.
 - If a task genuinely cannot run in the container environment, document the exception explicitly and treat it as a gap to close rather than the default approach.
 - Pass application configuration and credentials needed by containers through environment variables wired into `docker compose`.
+
+## Testing Workflow
+
+- Use `vitest` as the v1 test runner for local automated testing.
+- Prefer a failing or focused test first for logic-heavy feature work and reproducible bug fixes when practical, as long as the test does not require external DB infrastructure.
+- If strict test-first sequencing is not practical, add or update the relevant non-DB tests in the same change as the implementation.
+- Keep the first testing slices focused on pure server-side helpers and mocked orchestration that do not require external DB infrastructure; defer DB-backed or UI-heavy test work to later features.
+- Treat coverage output from `npm run test` as part of the normal verification feedback, but do not enforce minimum thresholds in Feature 14.
 
 ## Configuration And Secrets
 
@@ -262,12 +272,20 @@ Use this section to record decisions as they are made.
 | 2026-04-18 | Feature 13 stores curation by source plus stable event key so it survives import rebuilds. | Current Home Assistant and Plex imports rebuild `watch_events`, so favourites and hidden-item state join by durable source/event identity rather than a transient row id. |
 | 2026-04-18 | Feature 13 is complete with a dedicated `/favourites` route and timeline curation controls. | Timeline rows now support favourite and hide actions with a visible desktop trigger and touch long-press, hidden items drop out of default timeline and analytics views, and `/favourites` can recover hidden entries. |
 | 2026-04-18 | Resume-default scope for Feature 14 is Docker-first local testing with CI deferred. | Unless the user redirects, the first testing milestone should use `vitest`, target logic-heavy server-side code first, and leave GitHub Actions for Feature 15. |
+| 2026-04-18 | Feature 14 planning now fixes the first test slice to container-first `vitest` coverage for pure server-side helpers before DB-backed tests. | Initial targets should start with retention, formatting, and extracted source-status logic from the existing app code, with GitHub Actions still deferred to Feature 15. |
+| 2026-04-18 | Feature 14 implementation starts with `vitest` coverage in the `web` container and pure helper tests. | The initial automated suite covers formatting, retention config logic, and extracted source-status helpers, with coverage output shown by `npm run test` and no minimum threshold yet. |
+| 2026-04-18 | Feature 14 is complete with container-first `vitest` workflow and coverage output. | The repository now has Docker-native test commands, helper-focused automated coverage, README and AGENTS TDD guidance, and CI intentionally deferred to Feature 15. |
+| 2026-04-18 | Feature 14 coverage expansion now includes extracted timeline and analytics helpers. | The helper-focused suite now covers timeline shaping and analytics response mapping in addition to formatting, retention, and source-status logic, while DB-backed import and query coverage remains a follow-up slice. |
+| 2026-04-18 | Feature 14 coverage expansion now includes mocked `sources.ts` orchestration tests. | The container-first suite now covers source status assembly and shared health notices without introducing the DB-backed test layer yet. |
+| 2026-04-18 | Feature 14 coverage expansion now includes mocked `analytics.ts` orchestration tests and helper rewiring. | The production analytics module now uses `lib/analytics-data.ts`, and the suite covers analytics query orchestration without introducing a DB-backed test layer. |
+| 2026-04-18 | Remaining Feature 14 coverage work should stay non-DB and resume with importer/helper rewiring. | Resume order is `lib/home-assistant-import.ts`, then `lib/plex-import.ts`, then `lib/source-retention.ts`; DB-backed testing moves to a follow-up feature. |
+| 2026-04-20 | Feature 14 resumed with mocked Home Assistant and Plex importer orchestration plus source-retention cleanup coverage. | The non-DB slice now exercises real `runHomeAssistantImport`, `runPlexImport`, and `runSourceRetentionCleanup` paths with mocked DB and source clients, keeping the suite container-first while expanding coverage into importer and cleanup flows. |
 
 ## Next Discovery Steps
 
-1. Pick up Feature 14 implementation with Docker-first local testing and GitHub Actions deferred to Feature 15 unless the user redirects.
-2. Decide whether day-of-week patterns and streak-style metrics belong in a Feature 12 follow-up pass or a later feature.
-3. Preserve the completed Home Assistant, Plex, retention, and favourites behavior as analytics and later features land.
+1. Pick up Feature 15 for CI or GitHub Actions now that the local container-first test workflow exists.
+2. If Feature 14 needs more breadth, continue into any remaining DB-backed coverage slices after the non-DB importer and retention work completed here.
+3. Decide whether day-of-week patterns and streak-style metrics belong in a Feature 12 follow-up pass or a later feature.
 
 ## Feature Progress
 
@@ -297,5 +315,5 @@ Use this section to record decisions as they are made.
   A dedicated analytics tab is implemented with overview totals, watch-pattern trends, dataset growth, source contribution, and recent import activity from real stored data.
 - Feature 13: Complete
   A curation layer now lets the user favourite and hide individual timeline items, uses recommendation-oriented language in the curated experience, excludes hidden items from default timeline and analytics views, and recovers curated entries from a dedicated `/favourites` tab built on top of imported history.
-- Feature 14: Planned
-  The repository should adopt a container-first automated testing workflow with documented TDD expectations and a clear CI/GitHub Actions decision.
+- Feature 14: Complete
+  The repository now has a container-first local automated testing workflow using `vitest`, text and HTML coverage output, helper-focused and mocked orchestration tests, importer and retention cleanup coverage, extracted-helper rewiring for analytics, and documented TDD expectations, with CI deferred to Feature 15.

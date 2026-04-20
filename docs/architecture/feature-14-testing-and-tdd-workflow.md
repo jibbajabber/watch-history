@@ -15,15 +15,15 @@ Make the codebase safer to change by introducing container-first automated tests
 Included:
 - choose and integrate a test stack appropriate for the current Next.js/PostgreSQL app
 - define how tests run inside `docker compose`
-- add initial coverage for core server-side logic and at least one user-facing workflow
+- add initial coverage for core logic-heavy server-side modules
 - document how agents and humans should add tests during feature work
 - update repository workflow docs to encourage test-first or test-alongside-feature development
 - define how database-backed tests should manage setup and teardown in containers
 
 Excluded:
-- full end-to-end browser automation unless the chosen first test stack makes a thin slice practical
+- full end-to-end browser automation
 - broad coverage targets that are not yet realistic for the current codebase
-- mandatory CI gating unless GitHub Actions is explicitly included in scope
+- GitHub Actions and mandatory CI gating, which move to Feature 15 unless the user explicitly redirects this feature
 
 ## Problem Statement
 
@@ -53,9 +53,16 @@ Testing should follow the same project rule as the rest of the toolchain:
 - host-local workflows should not become the primary path
 
 That means the feature should define canonical commands such as:
-- `docker compose exec web npm test`
+- `docker compose exec web npm run test`
 - `docker compose exec web npm run test:watch`
-- possibly a separate one-off service or ephemeral database if needed
+- `docker compose exec web npm run test -- --runInBand` only if the chosen stack needs a serialized DB-backed mode
+
+The current Compose stack already provides the right baseline:
+- `web` contains the app code and Node toolchain
+- `db` provides the PostgreSQL service used by the app
+- `worker` reuses the same image but is not the right default place to run tests
+
+Feature 14 should therefore standardize on the `web` container as the default test entrypoint rather than inventing a parallel host-local workflow.
 
 ### Start With High-Value Server Logic
 
@@ -81,17 +88,16 @@ This should be recorded in:
 - `README.md`
 - any future contributor workflow docs
 
-### GitHub Actions May Be Part Of Feature 14 Or Feature 15
+### CI Is Deferred To Feature 15
 
-GitHub Actions support is related, but it may be a separate delivery slice.
+The current repo guidance already points to a smaller first milestone:
+- settle local containerized testing first
+- avoid broadening the feature into CI runtime, cache, and service-container concerns
+- make sure the first suite is useful before deciding how to enforce it remotely
 
-Why it may deserve its own feature:
-- local containerized testing and repository test architecture should be settled first
-- CI introduces separate concerns: runtime, cache strategy, secrets, service containers, and required checks
-
-Planning recommendation:
-- Feature 14 should at minimum define the local/containerized test workflow
-- GitHub Actions can either be a final phase of Feature 14 or split into Feature 15 if the implementation grows meaningfully beyond local test integration
+Planning decision for this feature:
+- Feature 14 delivers the local/containerized workflow only
+- Feature 15 will pick up GitHub Actions or other CI automation
 
 ## Candidate Test Layers
 
@@ -99,8 +105,8 @@ Planning recommendation:
 
 Strong initial candidates:
 - formatting helpers
-- source-retention summaries and cleanup selection
-- source-status derivation
+- source-retention parsing, serialization, and summary helpers
+- source-status derivation helpers
 - analytics and timeline response shaping helpers that do not require a live DB
 
 ### Integration Tests
@@ -112,9 +118,9 @@ Strong initial candidates:
 
 ### UI Tests
 
-Possible but probably later:
+Possible but later:
 - component rendering tests for timeline and analytics screens
-- interaction tests for future favourites/curation actions
+- interaction tests for favourites/curation actions
 
 These are valuable, but likely secondary to stabilizing server logic first.
 
@@ -122,8 +128,8 @@ These are valuable, but likely secondary to stabilizing server logic first.
 
 Feature 14 should explicitly evaluate and choose the test stack.
 
-Likely candidate:
-- `vitest` for TypeScript-friendly unit and integration tests
+Chosen v1 candidate:
+- `vitest` for TypeScript-friendly unit tests and narrow server-side integration tests
 
 Possible companions:
 - `@testing-library/react` for component tests
@@ -141,9 +147,9 @@ Selection criteria:
 ### Phase 1: Test Architecture
 
 - choose the test runner and first companion libraries
-- define the Docker-native commands for running tests
-- define how DB-backed tests will isolate state
-- decide whether sanitized fixtures are needed for importer tests
+- define the Docker-native commands for running tests from the `web` container
+- add the base config, scripts, and test file conventions
+- decide how DB-backed tests will isolate state without making them the initial blocker
 
 Exit criteria:
 - the repository has a documented testing architecture and canonical containerized commands
@@ -166,13 +172,14 @@ Exit criteria:
 Exit criteria:
 - contributors can discover how and when to write tests without tribal knowledge
 
-### Phase 4: CI Decision
+### Phase 4: DB-Backed Follow-Up Guidance
 
-- decide whether GitHub Actions belongs in this feature or should be split into Feature 15
-- if kept in scope, add a minimal CI workflow that runs the canonical containerized checks
+- document the preferred approach for later DB-backed tests
+- leave room for importer and route-level coverage once the base suite is stable
+- record CI as the explicit next feature rather than an unresolved branch of this one
 
 Exit criteria:
-- the repository has a clear plan for automated remote verification, whether implemented now or explicitly deferred
+- the repository has a clear next-step plan for DB-backed coverage and Feature 15 CI work
 
 ## Acceptance Criteria
 
@@ -180,22 +187,107 @@ Exit criteria:
 - tests run inside the Docker-managed environment
 - at least one meaningful logic-heavy area is covered by automated tests
 - `AGENTS.md` and `README.md` document testing expectations and TDD guidance
-- the feature leaves a clear decision on whether GitHub Actions is part of this feature or the next one
+- the feature leaves GitHub Actions explicitly deferred to Feature 15
+
+## Implementation Status
+
+Current state as of Monday, 20 April 2026:
+- `vitest` is installed and wired into `package.json`
+- canonical Docker-first commands are `docker compose exec web npm run test`, `docker compose exec web npm run test:watch`, and `docker compose exec web npm run typecheck`
+- `npm run test` runs with coverage enabled and writes both text and HTML output
+- `vitest.config.ts` is present with path alias support and V8 coverage reporting
+- `tsconfig.json` includes `vitest/globals`
+- `Dockerfile` includes the test config and `tests/` directory so the container image knows about the automated suite
+
+Verified helper extraction completed so far:
+- `lib/source-status.ts`
+- `lib/timeline-data.ts`
+- `lib/analytics-data.ts`
+- `lib/home-assistant-normalization.ts`
+- `lib/plex-normalization.ts`
+
+Production modules already rewired to extracted helpers:
+- `lib/analytics.ts` now uses `lib/analytics-data.ts`
+- `lib/sources.ts` now uses `lib/source-status.ts`
+- `lib/timeline.ts` now uses `lib/timeline-data.ts`
+
+Production modules not yet rewired to their extracted pure helpers:
+- `lib/home-assistant-import.ts` still contains its original normalization logic even though `lib/home-assistant-normalization.ts` now exists
+- `lib/plex-import.ts` still contains its original normalization logic even though `lib/plex-normalization.ts` now exists
+
+Current automated suite covers:
+- formatting helpers
+- source-status derivation helpers
+- source-retention parsing and summary helpers
+- timeline windowing, mapping, summary, insights, and highlights helpers
+- analytics response-shaping helpers
+- analytics query orchestration in `lib/analytics.ts` via mocked DB and curation seams
+- Home Assistant normalization helpers
+- Home Assistant import orchestration in `lib/home-assistant-import.ts` via mocked DB, connectivity, and fetch seams
+- Plex normalization helpers
+- Plex import orchestration in `lib/plex-import.ts` via mocked DB and fetch seams
+- source-retention cleanup orchestration in `lib/source-retention.ts` via mocked DB and advisory-lock seams
+- source status assembly and shared health notices in `lib/sources.ts` via mocked orchestration tests
+
+Last verified commands:
+- `docker compose exec web npm run typecheck`
+- `docker compose exec web npm run test`
+
+Last verified results:
+- `38` tests passed across `12` files
+- overall coverage: `68.57%`
+- `analytics.ts`: `100%`
+- `analytics-data.ts`: `98.41%`
+- `timeline-data.ts`: `90.95%`
+- `home-assistant-normalization.ts`: `97.72%`
+- `plex-normalization.ts`: `92.16%`
+- `format.ts`: `100%`
+- `source-status.ts`: `64.78%`
+- `source-retention.ts`: `81.77%`
+- `sources.ts`: `90.49%`
+
+Low-coverage or uncovered areas still left:
+- `timeline.ts`
+- `home-assistant-import.ts`
+- `plex-import.ts`
+- `home-assistant.ts`
+- `plex.ts`
+- `curation.ts`
+- any DB-backed/query-heavy modules
+
+## Resume Here
+
+If work resumes in a new context window, pick up from this exact point:
+- the Docker-first test workflow is implemented and working
+- the repo already has the extracted pure helper modules listed above
+- the suite now also includes mocked coverage for `lib/sources.ts`, `lib/home-assistant-import.ts`, `lib/plex-import.ts`, and `lib/source-retention.ts`, but remains mostly helper-heavy rather than DB-heavy
+- any further Feature 14 expansion should move into the remaining DB-backed coverage slices rather than the non-DB importer path
+
+Recommended next sequence:
+- first: any remaining DB-backed slices that materially increase confidence
+- second: Feature 15 CI or GitHub Actions work
+
+Recommended resume assumptions:
+- keep GitHub Actions deferred to Feature 15
+- keep browser/UI testing out of scope
+- keep using helper extraction before introducing DB-heavy tests when practical
+- do not add coverage thresholds yet
+- do not introduce a DB-backed test layer in Feature 14
 
 ## Open Questions
 
-- should the first tests focus on importer logic, analytics/timeline queries, or source-status/retention behavior?
-- should DB-backed tests use the existing app database container, a separate test database, or transactional isolation in one schema?
-- how much component-level testing is worth doing before the curation/favourites UI lands?
-- should GitHub Actions ship as Feature 14 Phase 4, or should that become Feature 15 after the local test workflow is stable?
-- do we want minimum coverage thresholds in v1, or should that wait until the suite is less sparse?
+- should the first test slice cover `lib/source-retention.ts` plus extracted source-status helpers, or should one importer module replace the source-status slice?
+- should DB-backed tests use the existing `db` service with per-test cleanup, or a dedicated test database once the suite grows?
+- is a small component-testing layer worth adding in this feature after the server-side suite lands, or should UI testing wait entirely for later work?
+- do we want minimum coverage thresholds in v1, or should that wait until the suite is materially broader?
 
 ## Resume Defaults
 
 If implementation resumes without fresh workflow clarification, use these defaults for v1:
 - start with `vitest` as the test runner
 - prioritize logic-heavy server-side coverage before component or browser-heavy testing
-- first test targets should be source-status/retention helpers plus one importer or analytics query-shaping slice
+- first remaining targets should be rewiring `analytics`, Home Assistant import, and Plex import to the already-created helper modules, then choosing between `source-retention` cleanup logic and a first DB-backed slice
 - run tests through the existing Docker-managed environment rather than host-local commands
-- defer GitHub Actions into Feature 15 unless the local/containerized test workflow lands with clear spare capacity
+- defer importer and DB-backed tests until the base `vitest` workflow is stable
+- defer GitHub Actions into Feature 15
 - avoid minimum coverage thresholds in the first testing milestone

@@ -1,96 +1,18 @@
-import { getAppTimezone } from "@/lib/app-config";
 import { buildVisibleWatchEventsCte, ensureWatchEventCurationSchema } from "@/lib/curation";
+import {
+  buildAnalyticsResponse,
+  escapeTimezone,
+  type ImportActivityRow,
+  type MonthlyActivityRow,
+  type MonthlyCreatedRow,
+  type OverviewRow,
+  type RangeRow,
+  type SourceContributionRow,
+  type TopSourceRow,
+  type TopTitleRow
+} from "@/lib/analytics-data";
 import { query } from "@/lib/db";
-import type {
-  AnalyticsImportSource,
-  AnalyticsRankedItem,
-  AnalyticsResponse,
-  AnalyticsSeriesPoint,
-  AnalyticsSourceContribution
-} from "@/lib/types";
-
-type OverviewRow = {
-  total_watch_events: number;
-  total_raw_records: number;
-  total_import_jobs: number;
-  sources_with_history: number;
-  active_days_last_30: number;
-  event_growth_last_7: number;
-  event_growth_last_30: number;
-  raw_growth_last_7: number;
-  raw_growth_last_30: number;
-  import_runs_last_30: number;
-  import_failures_last_30: number;
-};
-
-type MonthlyActivityRow = {
-  label: string;
-  event_count: number;
-  active_days: number;
-};
-
-type TopTitleRow = {
-  title: string;
-  total_events: number;
-  total_duration_minutes: number | null;
-};
-
-type TopSourceRow = {
-  source_name: string;
-  total_events: number;
-  total_duration_minutes: number | null;
-};
-
-type MonthlyCreatedRow = {
-  label: string;
-  raw_records: number;
-  watch_events: number;
-};
-
-type SourceContributionRow = {
-  source_name: string;
-  watch_events: number;
-  raw_records: number;
-  successful_imports: number;
-  failed_imports: number;
-  latest_success_at: string | null;
-};
-
-type ImportActivityRow = {
-  source_name: string;
-  total_runs: number;
-  successful_runs: number;
-  failed_runs: number;
-  average_records_imported: number | null;
-  latest_success_at: string | null;
-};
-
-type RangeRow = {
-  earliest_at: string | null;
-  latest_at: string | null;
-};
-
-function escapeTimezone() {
-  return getAppTimezone().replace(/'/g, "''");
-}
-
-function formatMonthlyLabel(value: string) {
-  return new Intl.DateTimeFormat("en-GB", {
-    month: "short",
-    year: "2-digit",
-    timeZone: getAppTimezone()
-  }).format(new Date(`${value}-01T00:00:00Z`));
-}
-
-function buildRankedItems<T extends { label: string; totalEvents: number; detail: string }>(
-  rows: T[]
-): AnalyticsRankedItem[] {
-  return rows.map((row) => ({
-    label: row.label,
-    value: row.totalEvents,
-    detail: row.detail
-  }));
-}
+import type { AnalyticsResponse } from "@/lib/types";
 
 export async function getAnalyticsData(): Promise<AnalyticsResponse> {
   await ensureWatchEventCurationSchema();
@@ -312,112 +234,15 @@ export async function getAnalyticsData(): Promise<AnalyticsResponse> {
     )
   ]);
 
-  const overview = overviewResult.rows[0] ?? {
-    total_watch_events: 0,
-    total_raw_records: 0,
-    total_import_jobs: 0,
-    sources_with_history: 0,
-    active_days_last_30: 0,
-    event_growth_last_7: 0,
-    event_growth_last_30: 0,
-    raw_growth_last_7: 0,
-    raw_growth_last_30: 0,
-    import_runs_last_30: 0,
-    import_failures_last_30: 0
-  };
-
-  const monthlyActivity: AnalyticsSeriesPoint[] = monthlyActivityResult.rows.map((row) => ({
-    label: formatMonthlyLabel(row.label),
-    value: row.event_count,
-    secondaryValue: row.active_days
-  }));
-
-  const topTitles = buildRankedItems(
-    topTitlesResult.rows.map((row) => ({
-      label: row.title,
-      totalEvents: row.total_events,
-      detail:
-        row.total_duration_minutes && row.total_duration_minutes > 0
-          ? `${row.total_duration_minutes} minutes logged`
-          : "Duration not consistently available"
-    }))
-  );
-
-  const topSources = buildRankedItems(
-    topSourcesResult.rows.map((row) => ({
-      label: row.source_name,
-      totalEvents: row.total_events,
-      detail:
-        row.total_duration_minutes && row.total_duration_minutes > 0
-          ? `${row.total_duration_minutes} minutes logged`
-          : "Duration not consistently available"
-    }))
-  );
-
-  const monthlyCreated = monthlyCreatedResult.rows.map((row) => ({
-    label: formatMonthlyLabel(row.label),
-    value: Math.max(row.raw_records, row.watch_events),
-    rawRecords: row.raw_records,
-    watchEvents: row.watch_events
-  }));
-
-  const sourceContribution: AnalyticsSourceContribution[] = sourceContributionResult.rows.map((row) => ({
-    sourceName: row.source_name,
-    watchEvents: row.watch_events,
-    rawRecords: row.raw_records,
-    successfulImports: row.successful_imports,
-    failedImports: row.failed_imports,
-    latestSuccessAt: row.latest_success_at
-  }));
-
-  const importActivity: AnalyticsImportSource[] = importActivityResult.rows.map((row) => ({
-    sourceName: row.source_name,
-    totalRuns: row.total_runs,
-    successfulRuns: row.successful_runs,
-    failedRuns: row.failed_runs,
-    averageRecordsImported:
-      row.average_records_imported === null ? null : Number(row.average_records_imported),
-    latestSuccessAt: row.latest_success_at
-  }));
-
-  const watchRange = watchRangeResult.rows[0] ?? { earliest_at: null, latest_at: null };
-  const importRange = importRangeResult.rows[0] ?? { earliest_at: null, latest_at: null };
-
-  return {
-    overview: {
-      totalWatchEvents: overview.total_watch_events,
-      totalRawRecords: overview.total_raw_records,
-      totalImportJobs: overview.total_import_jobs,
-      sourcesWithHistory: overview.sources_with_history,
-      activeDaysLast30: overview.active_days_last_30,
-      eventGrowthLast7: overview.event_growth_last_7,
-      eventGrowthLast30: overview.event_growth_last_30,
-      rawGrowthLast7: overview.raw_growth_last_7,
-      rawGrowthLast30: overview.raw_growth_last_30,
-      importRunsLast30: overview.import_runs_last_30,
-      importFailuresLast30: overview.import_failures_last_30
-    },
-    watchPatterns: {
-      monthlyActivity,
-      topTitles,
-      topSources,
-      earliestWatchAt: watchRange.earliest_at,
-      latestWatchAt: watchRange.latest_at
-    },
-    datasetGrowth: {
-      monthlyCreated,
-      sourceContribution,
-      earliestImportedAt: importRange.earliest_at,
-      latestImportedAt: importRange.latest_at
-    },
-    importActivity: {
-      bySourceLast30Days: importActivity,
-      totalRunsLast30: overview.import_runs_last_30,
-      successCountLast30: Math.max(
-        overview.import_runs_last_30 - overview.import_failures_last_30,
-        0
-      ),
-      failureCountLast30: overview.import_failures_last_30
-    }
-  };
+  return buildAnalyticsResponse({
+    overviewRow: overviewResult.rows[0],
+    monthlyActivityRows: monthlyActivityResult.rows,
+    topTitleRows: topTitlesResult.rows,
+    topSourceRows: topSourcesResult.rows,
+    monthlyCreatedRows: monthlyCreatedResult.rows,
+    sourceContributionRows: sourceContributionResult.rows,
+    importActivityRows: importActivityResult.rows,
+    watchRangeRow: watchRangeResult.rows[0],
+    importRangeRow: importRangeResult.rows[0]
+  });
 }

@@ -226,6 +226,7 @@ Current state as of Monday, 20 April 2026:
 - production build output was checked and no standalone source-map files were emitted
 - sensitive env-var references were found in server-only chunks, but not in browser-facing static assets
 - source-map and build-artifact review is otherwise complete for the current repo state unless a concrete source-map setting appears later
+- feature 15 is complete and raised as PR15
 
 ## Open Questions
 

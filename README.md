@@ -55,6 +55,7 @@ Watch history aims to try to solve that, it collects your viewing data from sour
 - `db/init/002_watch_event_curation.sql`: Initial schema extension for persistent watch-event curation.
 - `docs/architecture/`: Feature specs, architecture notes, and implementation-shaping decisions that drive review-first development for each major slice of the product.
                         See [docs/architecture/README.md](docs/architecture/README.md): Index of architecture specs, their purpose, and the feature-by-feature map for this planning area.
+- `docs/decisions/`: Historical decision archives that have been moved out of `AGENTS.md` so the active coordination file stays focused on current work.
 - `docs/security/security.md`: Standing security-process guide for secret handling, browser/API exposure review, logging hygiene, and secure development flow.
 - `lib/`: Server-side data access, formatting, and shared type definitions.
 - `lib/app-config.ts`: App-level environment and timezone helpers.
@@ -143,6 +144,7 @@ Completed:
 - Feature 12: analytics tab for overview, watch patterns, dataset growth, source contribution, and import activity from real stored data
 - Feature 13: favourites tab with persistent favourite and hide curation, hidden-item exclusion from default timeline and analytics views, and recovery of hidden items from `/favourites`
 - Feature 14: container-first local automated testing with `vitest`, coverage output, helper-focused tests, mocked source, importer, retention, and analytics orchestration coverage, and documented TDD guidance
+- Feature 15: security review and secret-exposure hardening across browser-visible paths, API responses, logs, and build artifacts
 ## Security Process
 
 - `docs/security/security.md` is the standing process guide for keeping user-provided secrets server-side and out of browser-visible, logged, or build-generated surfaces.
@@ -151,12 +153,12 @@ Completed:
 
 ## Planned Next Feature
 
-- Feature 15: security review and secret-exposure hardening across browser-visible paths, API responses, logs, and build artifacts
+- No feature is currently planned.
 
 Recommended next pickup:
-1. Pick up Feature 15 for the security review and secret-exposure hardening pass
-2. Resume any remaining DB-backed coverage work for Feature 14 only if you want to broaden beyond the current non-DB importer and retention slices
-3. Decide whether streak and time-of-day metrics belong in a Feature 12 follow-up pass or a later feature
+1. Decide the next feature to spec if new product work is ready to start.
+2. Resume any remaining DB-backed coverage work for Feature 14 only if you want to broaden beyond the current non-DB importer and retention slices.
+3. Decide whether streak and time-of-day metrics belong in a Feature 12 follow-up pass or a later feature.
 
 ## Development Workflow
 
